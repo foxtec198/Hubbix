@@ -25,6 +25,11 @@ class Employee(BaseModel):
             })
         return employees
 
+    @classmethod
+    def _search_by_mat(cls, mat, cr):
+        return cls.query.filter_by(matricula=mat, cr=cr).one()
+        
+
         
         
 

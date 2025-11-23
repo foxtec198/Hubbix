@@ -1,50 +1,57 @@
+# Utils
 from werkzeug.datastructures.structures import MultiDict
 from werkzeug.datastructures.headers import Headers
-from PIL import Image, ImageDraw, ImageFont
-from manager.models.service_order import ServiceOrder
-from manager.models.cash_register import CashRegister
-from manager.models.employess import Employee
-from manager.models.config import Config
-from manager.models.view_service_order import vwOS
-from models.store_model import Store
 from utils.now import now, timedelta
 from utils.check_cr import check_cr
 from utils.check_field import check_field
 from utils.db import cons, db
 from flask import jsonify
-from os import path, getcwd
+from os import path, getcwd, remove
+from PIL import Image, ImageDraw, ImageFont
+
+# Models
+from manager.models.service_order import ServiceOrder # A propira OS
+from manager.models.cash_register import CashRegister # Caixa
+from manager.models.employess import Employee # Funcionarios
+from manager.models.config import Config # Configurações
+from manager.models.clients import Client # Clientes
+from manager.models.view_service_order import vwOS # View
+from models.store_model import Store # Lojas
 
 class ServiceOrderServices:
     def get(self, bd:MultiDict, hd:Headers): # Pega as OS fultrando por status e CR
-        status = bd.get('status', False)
         cr = hd.get('cr', False)
-        print(check_cr(cr))
+        status = bd.get('status', False)
+        id = bd.get("id", False)
         if check_cr(cr):
+            if id: return jsonify([o.to_dict() for o in vwOS.query.filter_by(id=id).all()])
             if not status: return jsonify(vwOS.search_by_cr(cr))
             if status == 'EXPIRADA': return jsonify(vwOS.get_expireds(cr, (now() - timedelta(90)).strftime("%m-%Y")))
             elif status: return jsonify(vwOS.search_by_status(status, cr))
         return jsonify('Loja inexistente!'), 401
 
-    def create(self, bd:MultiDict, hd:Headers):
+    def create(self, bd:MultiDict, hd:Headers): # Cria um ordem de serviço
         cr = hd.get("cr", False)
+        gc = hd.get('gc')
         if check_cr(cr):
-            gc = hd.get('gc')
-
-            id = bd.get('id')
+            # Dados do Aparelho
             modelo = bd.get('modelo')
-            cor = bd.get('cor')
-            marca = bd.get('marca')
-            status = bd.get('status', "")
-            retirada = bd.get('retirada')
-            ligar = bd.get('ligar')
-            st_os = bd.get('st_os')
-            valor = bd.get('valor')
-            atendente = bd.get('atendente')
-            matricula = bd.get('matricula')
+            cor = bd.get('cor', "")
+            marca = bd.get('marca', "")
 
+            # Sobre o serviço com o aparelho
+            status = bd.get('status', "")
+            relato = bd.get('relato', "").upper()
             tipo = bd.get('tipo', "").upper()
             obs = bd.get('obs', "").upper()
-            relato = bd.get('relato', "").upper()
+
+            # Dados da OS
+            id_client = bd.get('cliente_id')
+            retirada = bd.get('retirada', "0000/00/00")
+            ligar = bd.get('ligar', True)
+            st_os = bd.get('st_os', "ABERTA")
+            valor = bd.get('valor')
+            matricula = bd.get('matricula')
 
             # Dados que serão obrigatórios! 
             ok, error = check_field(
@@ -52,38 +59,35 @@ class ServiceOrderServices:
                 cor = cor,
                 marca = marca,
                 retirada = retirada,
-                st_os = st_os,
                 valor = valor,
                 matricula = matricula
             )
             
             if ok: # Confirma os dados obrigatorios passados acima
                 if CashRegister.check(cr): # Confirma se o caixa esta aberto
-                    # Pega o nome do atendente pela matricula
-                    atendente = Employee.query.filter_by(matricula=matricula, cr=cr).one().upper()
-
+                    atendente = Employee.query.filter_by(matricula=matricula, cr=cr).one() # Pega o nome do atendente pela matricula
                     # Cria o Modelo da Ordem
                     os = ServiceOrder()
-                    os.id = id 
+                    os.id_cliente = id_client
                     os.modelo = modelo 
-                    os.cor = cor.upper()  # pyright: ignore[reportOptionalMemberAccess]
-                    os.marca = marca.upper() # pyright: ignore[reportOptionalMemberAccess]
+                    os.cor = cor.upper()
+                    os.marca = marca.upper()
                     os.status = status.upper()
                     os.tipo = tipo 
                     os.obs = obs, 
                     os.relato = relato 
-                    os.entrega = f"{retirada.replace('/','-')} 00:00:00", # pyright: ignore[reportOptionalMemberAccess]
+                    os.entrega = f"{retirada.replace('/','-')} 00:00:00",
                     os.abertura = now(), 
                     os.ligar = ligar
-                    os.situacao = st_os.upper(), # pyright: ignore[reportOptionalMemberAccess]
+                    os.situacao = st_os.upper(),
                     os.valor = valor
-                    os.atendente = atendente 
+                    os.atendente = atendente.nome.upper()
                     os.grupodecliente = gc 
                     os.cr = cr
 
                     # Faz a adic~çao ao bd
                     db.session.add(os)
-                    db.commit()
+                    db.session.commit()
                     self.make_so(os.id, cr)
                     return jsonify({
                         'msg':"Ordem aberta com sucesso!",
@@ -93,13 +97,76 @@ class ServiceOrderServices:
             return jsonify(error), 400
         return jsonify("Loja Inexistente"), 401
     
-    def resize(self, img, scale):
+    def update(self, bd:MultiDict, hd:Headers): # Atualiza os dados das Ordens
+        # Cred
+        cr = hd.get('cr', False)
+
+        # Dados
+        id = bd.get('id', False)
+        status_os = bd.get('status_os', "ABERTA")
+        modelo = bd.get('modelo')
+        cor = bd.get('cor')
+        marca = bd.get('marca')
+        valor = bd.get('valor')
+        cpf = bd.get('cpf')
+        servico = bd.get('servico')
+        imei = bd.get('imei')
+
+        if check_cr(cr): # Confere se a loja esta ok
+            if CashRegister.check(cr): # Retorna se o caixa está aberto
+                if id:
+                    os = ServiceOrder.query.filter_by(id = id).one() # Pega os dados da OS - Se existente
+                    vos = vwOS.query.filter_by(id = id).one()
+                    
+                    if os: # Confere se a OS existe antes de dar continuidade
+                        client = Client.query.filter_by(cpf=vos.cpf, cr=cr).one() # Pega os dados do cliente
+
+                        #  Atualiza os Dados da Ordem
+                        if status_os: os.status = status_os
+                        if modelo: os.modelo = modelo.upper()
+                        if cor: os.cor = cor.upper()
+                        if marca: os.marca = marca.upper()
+                        if valor: os.valor = valor
+                        if servico: os.servico = servico
+                        if imei: os.imei = imei
+                        
+                        # Atualiza os dados do CLiente
+                        if modelo: client.modelo = modelo.upper()
+                        if cor: client.cor = cor.upper()
+                        if marca: client.marca = marca.upper()
+                        if imei: client.imei = imei
+                        
+                        try: remove(f'manager/assets/os/os_{id}.pdf')
+                        except: ...
+                        
+                        self.make_so(id, cr)
+                        db.session.commit()
+                        
+                        return jsonify("OS:%s editada com sucesso!"%id), 200
+                    return jsonify("ID Obrigatório!"), 400
+                return jsonify("Ordem não localizada, favor verificar o numeor de ordem"), 401
+            return jsonify("Primeiro abra o caixa!"), 401
+        return jsonify("Loja inexistente!"), 401
+    
+    def delete(self, bd:MultiDict,hd:Headers): # Ao inves de Deletar seta como Cancelado
+        id = bd.get("id", False)
+        cr = hd.get("cr", False)
+        if check_cr(cr): # Confere se a loja esta OK
+            if id: # Confere o ID da OS
+                os = ServiceOrder.query.filter_by(id=id).one()
+                os.status = "CANCELADA"
+                db.session.commit()
+                return jsonify("Ordem Cancelada com sucesso!")
+            return jsonify("ID Obrigatorio"), 400
+        return jsonify("Loja inexistente"), 401
+    
+    def resize(self, img, scale): # faz o resize da logo pra utilizar na OS
         x = int(img.size[0]) / int(scale)
         y = int(img.size[1]) / int(scale)
         newImg = img.resize((int(x), int(y)))
         return newImg
     
-    def make_so(self, id, cr):
+    def make_so(self, id, cr): # Cria o arquivo da Ordem de Serviço
         res = cons("""SELECT
             C.Nome, C.CPF, C.Endereco, C.Telefone,
             OS.Modelo, OS.Cor, OS.Marca, OS.IMEI, OS.Atendente, to_char(OS.Abertura, 'DD/MM/YYYY HH24:MI'),
@@ -109,7 +176,6 @@ class ServiceOrderServices:
                 ON C.id = OS.id_cliente
             WHERE OS.id = %s
             AND OS.cr = '%s'""", (id, cr), all=False)
-        print(res)
         if res:
             nome, cpf, end, telefone, modeloC, cor, marca, imei, func, dataA, stA, tipoS, obsOs, relatoOs, ligar, dataE, valor, situacao = res
             numOs = id
@@ -225,8 +291,7 @@ class ServiceOrderServices:
             return arquivo
         return 'Nao encontramos esta Ordem em nosso banco de dados!'
 
-    # Função criada para usar o K, M, B ao inves de manter o numero inteiro!
-    def formatNumber(self, number:float = 0):
+    def formatNumber(self, number:float = 0): # Função criada para usar o K, M, B ao inves de manter o numero inteiro!
         if number > 0 and number < 1000: return round(number, 2)
 
         # Unidade de Milhar

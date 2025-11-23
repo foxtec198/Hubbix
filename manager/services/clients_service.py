@@ -1,14 +1,13 @@
-from manager.models.clients import Client, db
+# Utils
 from random import randint
 from flask import jsonify
 from utils.now import now
 from werkzeug.datastructures.structures import MultiDict
 from werkzeug.datastructures.headers import Headers
+# Models
+from manager.models.clients import Client, db
 
 class ClientService:
-    def __init__(self) -> None:
-        pass
-    
     def get(self, bd:MultiDict, hd:Headers):
         cr = hd.get("cr", False)
         id = bd.get("client_id", False) # Confirma se tem ID do Cliente
@@ -119,5 +118,3 @@ class ClientService:
                 return jsonify("Cliente excluso com sucesso!"), 200
             return jsonify("Id Obrigatório"), 400
         return jsonify("Credenciais invalidas"), 401
-
-            

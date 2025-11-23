@@ -31,10 +31,8 @@ class ServiceOrder(BaseModel):
 
     @classmethod
     def search_by_cr(cls, cr):
-        o = []
         oss = cls.query.filter_by(cr=cr).all()
-        for os in oss: o.append(os.to_dict())
-        return o
+        return [o.to_dict() for o in oss]
         
 
         

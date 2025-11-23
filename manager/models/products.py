@@ -13,7 +13,6 @@ class Product(BaseModel):
     valor = db.Column(db.Float())    
     estoque_minimo = db.Column(db.Integer())    
     quantidade = db.Column(db.Integer())    
-    alerta = db.Column(db.Integer())
     desconto = db.Column(db.Float())    
     lucro = db.Column(db.Float())    
     fornecedor = db.Column(db.String(), nullable=False)    
@@ -22,3 +21,7 @@ class Product(BaseModel):
     grupodecliente = db.Column(db.String(), nullable=False)
     cr = db.Column(db.String(), nullable=False)
 
+    @classmethod
+    def _search_by_cr(cls, cr):
+        products =cls.query.filter(cls.cr==cr)
+        return [prod.to_dict() for prod in products]

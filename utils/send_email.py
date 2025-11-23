@@ -4,8 +4,9 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 from smtplib import SMTP
+from utils.printcmd import print_cmd
 
-class Email():
+class Email:
     def __init__(self):
         self.host = 'smtp.gmail.com'
         self.port = 587
@@ -39,4 +40,4 @@ class Email():
 
         server.sendmail(msg['From'], msg['To'], msg.as_string())
         server.quit()
-        print('Enviado')
+        print_cmd('Enviado')

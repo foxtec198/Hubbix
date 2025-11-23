@@ -6,6 +6,9 @@ class Brand(BaseModel):
     __tablename__ = "marcas"
 
     id = db.Column(db.Integer(), primary_key=True)
-    marca = db.Column(db.String(), nullable=False)
-    cr = db.Column(db.String())
+    nome = db.Column(db.String(), nullable=False)
+    cr = db.Column(db.String(),  nullable=False)
     
+    @classmethod
+    def search_by_cr(cls, cr):
+        return [c.to_dict() for c in cls.query.filter_by(cr=cr).all()]
