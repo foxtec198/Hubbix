@@ -39,7 +39,7 @@ class ClientService:
                 if cpf == 0: # Em caso da não inserção do CPF consta a geração do CPFF - Exemplo: F_123456789101112
                     for i in range(5): # Aqui ele gera um CPFF aleatorio e testa pra confirmar se ja tem igual no BD - 5 tentativas
                         l = 14 # Numero de letras que tera o CPFF que no caso é Ficticio pois o cliente nao desejou informa-lo!
-                        newcpf = f"F_{randint(int("0"*l), int("9"*l))}{i}"
+                        newcpf = f"F_{randint(int('0'*l), int('9'*l))}{i}"
                         cpf = Client.query.filter_by(cpf=newcpf).all()
                         if not cpf: 
                             cpf = newcpf
