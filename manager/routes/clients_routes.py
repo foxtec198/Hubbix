@@ -19,4 +19,4 @@ def main():
         case 'DELETE': # Deleta cliente por id
             return client_service.delete(rq.args, rq.headers)
         
-    return jsonify("Erro interno"), 500
+    return jsonify("Metodo não permitido"), 401
