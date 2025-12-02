@@ -13,7 +13,7 @@ class ClientService:
     @require_cr
     def get(self, bd:MultiDict, hd:Headers, cr = None):
         id = bd.get("client_id", False) # Confirma se tem ID do Cliente
-        if id: return jsonify([c.to_dict() for c in Client.query.filter_by(id=id).all()])  # Se tiver o id filtra pelo mesmo
+        if id: return jsonify(Client.query.filter_by(id=id, cr=cr).one().to_dict())  # Se tiver o id filtra pelo mesmo
         return jsonify([c.to_dict() for c in Client.query.filter_by(cr=cr).all()])# Aqui separa apenas por CR 
         
     @check_connection
@@ -110,7 +110,7 @@ class ClientService:
     def delete(self, bd:MultiDict, hd:Headers, cr = None):
         client_id = bd.get("client_id", None)
         if client_id:
-            db.session.delete(Client.query.filter_by(id=client_id, cr=cr))
+            db.session.delete(Client.query.get(client_id))
             db.session.commit()
             return jsonify("Cliente excluso com sucesso!"), 200
         return jsonify("Id Obrigatório"), 400

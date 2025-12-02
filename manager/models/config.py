@@ -15,3 +15,7 @@ class Config(BaseModel):
     email_fx = db.Column(db.String(50))
     config_pix = db.Column(db.Boolean(), default=False)
     nnf = db.Column(db.Boolean(), default=True)
+
+    @classmethod
+    def get(cls, cr):
+        return cls.query.filter_by(cr=cr).one()

@@ -7,16 +7,8 @@ client_service = ClientService()
 @clientes_bp.route("/", methods=['GET', 'POST', 'DELETE', 'PATCH'])
 def main():
     match rq.method:
-        case 'GET': # Pega todos os clientes
-            return client_service.get(rq.args, rq.headers)
-            
-        case 'POST': # Cria o Cliente
-            return client_service.create(rq.get_json(), rq.headers)
-        
-        case 'PATCH': # Atualiza os dados do cliente
-            return client_service.update(rq.get_json(), rq.headers) 
-        
-        case 'DELETE': # Deleta cliente por id
-            return client_service.delete(rq.args, rq.headers)
-        
-    return jsonify("Metodo não permitido"), 401
+        case 'GET': return client_service.get(rq.args, rq.headers) # Pega todos os clientes
+        case 'POST': return client_service.create(rq.get_json(), rq.headers) # Cria o Cliente
+        case 'PATCH': return client_service.update(rq.get_json(), rq.headers) # Atualiza os dados do cliente
+        case 'DELETE': return client_service.delete(rq.args, rq.headers) # Deleta cliente por id
+    return jsonify("Metodo não permitido"), 405

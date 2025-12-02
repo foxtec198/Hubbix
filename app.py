@@ -34,10 +34,5 @@ db.init_app(app)
 # Carrega os Blueprints
 for item in blueprints: app.register_blueprint(item, url_prefix=blueprints[item])
 
-# Cria banco de Dados caso não existam
-# with app.app_context(): 
-#     for bind in app.config["SQLALCHEMY_BINDS"]:
-#         print(bind)
-
 # Modo Dev
 if __name__ == "__main__": app.run(debug=True, host="0.0.0.0", port=int(getenv("PORT", 9560)))

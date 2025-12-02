@@ -17,8 +17,6 @@ class Sale(BaseModel):
     cr = db.Column(db.String)
     tipo = db.Column(db.String)
     matricula = db.Column(db.Integer)
-    venda_por_os = db.Column(db.Boolean)
-    entregue = db.Column(db.Boolean)
     merchant_id = db.Column(db.String)
     order_id = db.Column(db.String)
     ext_key = db.Column(db.String)

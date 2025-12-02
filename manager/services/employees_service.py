@@ -11,6 +11,15 @@ class EmployeeService:
     @check_connection
     @require_cr
     def get(self, bd:MultiDict, hd:Headers, cr = None):
+        mat = bd.get("mat", None)
+        if mat:
+            emp = Employee._search_by_mat(mat, cr)
+            if emp:
+                return jsonify({
+                    "nome": emp.nome,
+                    "matricula": emp.matricula,
+                    "perm": emp.permissao
+                })
         return jsonify(Employee._search_by_cr(cr)), 200
         
     @check_connection
@@ -50,9 +59,9 @@ class EmployeeService:
         gc = hd.get("gc")
 
         # Dados
-        matricula = bd.get("matricula", False)
+        matricula = bd.get("mat", False)
         nome = bd.get("nome")
-        perm = bd.get("perm", "FUNC")
+        perm = bd.get("perm")
         pwd = bd.get("pwd")
 
         if matricula:
@@ -76,14 +85,15 @@ class EmployeeService:
     @require_cr
     def delete(self, bd:MultiDict, hd:Headers, cr=None):
         # Id Obrigatorio
-        id = bd.get("id", False)
+        mat = bd.get("mat", False)
         
         # Conferencia de Credencias e dados
-        if id:
-            emp = Employee.query.filter_by(id=id, cr=cr)
+        if mat:
+            emp = Employee.query.get(mat)
             if emp:
                 db.session.delete(emp)
                 db.session.commit()
                 return jsonify("Sucesso!"), 200
+            return jsonify("Funcionario não encontrado!"), 404
         return jsonify("id obrigatório!"), 400
     

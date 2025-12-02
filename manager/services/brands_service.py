@@ -10,13 +10,13 @@ from manager.models.brands import Brand, db
 class BrandService:
     @check_connection
     @require_cr
-    def get(self, bd:MultiDict, hd:Headers, cr= None):
+    def get(self, bd:MultiDict, hd:Headers, cr= None): # Pega todas as marcas por CR
         if check_cr(cr): return jsonify(Brand.search_by_cr(cr))
         return jsonify("Loja Inexistente"), 401
     
     @check_connection
     @require_cr
-    def create(self, bd:MultiDict, hd:Headers, cr = None):
+    def create(self, bd:MultiDict, hd:Headers, cr = None): # Cria uma marca por CR
         name = bd.get("nome") 
         brand = Brand()
         if name: # Confirma se foi passado o nome
@@ -28,12 +28,12 @@ class BrandService:
                 "msg": f"{brand.nome} criada com sucesso!",
                 "ok": True,
                 "id": brand.id
-            })
+            }), 201
         return jsonify("Nome obrigatório"), 400
     
     @require_cr
     @check_connection
-    def update(self, bd:MultiDict, hd:Headers, cr = None):
+    def update(self, bd:MultiDict, hd:Headers, cr = None): # Atualiza o nome de uma marca por ID
         id = bd.get("id")
         if id: 
             brand = Brand.query.filter_by(id=id, cr=cr).one()
@@ -50,10 +50,10 @@ class BrandService:
     
     @require_cr
     @check_connection
-    def delete(self, bd:MultiDict, hd:Headers, cr = None):
+    def delete(self, bd:MultiDict, hd:Headers, cr = None): # DEleta uma marca especfica por ID
         id = bd.get("id")
         if id:
-            brand = Brand.query.filter_by(cr=cr, id=id)
+            brand = Brand.query.get(id)
             if brand:
                 db.session.delete(brand)
                 db.session.commit()

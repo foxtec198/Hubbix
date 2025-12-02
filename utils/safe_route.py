@@ -1,4 +1,4 @@
-from flask import jsonify, request
+from flask import jsonify, request as rq
 from functools import wraps
 from sqlalchemy.exc import OperationalError
 from utils.check_cr import check_cr
@@ -17,7 +17,7 @@ def check_connection(func):
 def require_cr(func):
     @wraps(func)
     def wrapper(*args,**kwargs):
-        cr = request.headers.get("cr", None)
+        cr = rq.headers.get("cr", None)
 
         if not check_cr(cr): return jsonify("Loja inexistente"), 401
 

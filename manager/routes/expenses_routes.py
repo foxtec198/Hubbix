@@ -11,4 +11,4 @@ def main():
         case "POST": return expense_service.create(rq.get_json(), rq.headers)
         case "PATCH": return expense_service.update(rq.get_json(), rq.headers)
         case "DELETE": return expense_service.delete(rq.args, rq.headers)
-    return jsonify("Metodo não permitido"), 401
+    return jsonify("Metodo não permitido"), 405
