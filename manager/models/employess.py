@@ -1,5 +1,4 @@
-from models.base_model import BaseModel
-from utils.db import db
+from models.base_model import BaseModel, db
 
 class Employee(BaseModel):
     __bind_key__ = "manager" # Define qual BD vamos utilizar
@@ -28,7 +27,7 @@ class Employee(BaseModel):
     @classmethod
     def _search_by_mat(cls, mat, cr):
         return cls.query.filter_by(matricula=mat, cr=cr).one()
-        
+
 
         
         

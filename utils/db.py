@@ -5,7 +5,6 @@ from os import environ
 
 db = SQLAlchemy()
 
-
 def cons(sql, *args, db="MANAGER", all=True):
     """db deve receveber ["MANAGER", "GOURMET", "LOJAS", "ANALYTICS"]"""
     if type(db) == str and db: 

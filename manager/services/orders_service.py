@@ -2,7 +2,6 @@
 from werkzeug.datastructures.structures import MultiDict
 from werkzeug.datastructures.headers import Headers
 from utils.now import now, timedelta
-from utils.check_cr import check_cr
 from utils.check_field import check_field
 from utils.db import cons, db
 from flask import jsonify
@@ -17,6 +16,7 @@ from manager.models.employess import Employee # Funcionarios
 from manager.models.config import Config # Configurações
 from manager.models.clients import Client # Clientes
 from manager.models.vw_os import ViewOrders as vwOS # View
+from manager.models.timezone import fuso # Get timezone Function
 from models.store_model import Store # Lojas
 
 class OrdersService:
@@ -25,12 +25,10 @@ class OrdersService:
     def get(self, bd:MultiDict, hd:Headers, cr=None): # Pega as OS fultrando por status e CR
         status = bd.get('status', False)
         id = bd.get("id", False)
-        if check_cr(cr):
-            if id: return jsonify(vwOS.query.filter_by(id=id).one().to_dict())
-            if not status: return jsonify(vwOS.search_by_cr(cr))
-            if status == 'EXPIRADA': return jsonify(vwOS.get_expireds(cr, (now() - timedelta(90)).strftime("%m-%Y")))
-            elif status: return jsonify(vwOS.search_by_status(status, cr))
-        return jsonify('Loja inexistente!'), 401
+        if id: return jsonify(vwOS.query.filter_by(id=id).one().to_dict())
+        if not status: return jsonify(vwOS.search_by_cr(cr))
+        if status == 'EXPIRADA': return jsonify(vwOS.get_expireds(cr, (now(fuso(cr)) - timedelta(90)).strftime("%m-%Y")))
+        elif status: return jsonify(vwOS.search_by_status(status, cr))
 
     @check_connection
     @require_cr
@@ -79,7 +77,7 @@ class OrdersService:
                 os.obs = obs, 
                 os.relato = relato 
                 os.entrega = f"{retirada.replace('/','-')} 00:00:00",
-                os.abertura = now(), 
+                os.abertura = now(fuso(cr)), 
                 os.ligar = ligar
                 os.situacao = st_os.upper(),
                 os.valor = valor

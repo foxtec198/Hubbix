@@ -1,5 +1,4 @@
-from models.base_model import BaseModel
-from utils.db import db
+from models.base_model import BaseModel, db
 
 class Pos(BaseModel):
     __bind_key__ = "manager"

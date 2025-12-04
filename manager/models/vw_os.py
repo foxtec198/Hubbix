@@ -1,7 +1,6 @@
-from models.base_model import BaseModel
-from utils.db import db
-from utils.now import dt
+from models.base_model import BaseModel, db
 from sqlalchemy import cast, Date, func
+from utils.now import dt
 
 class ViewOrders(BaseModel):
     __bind_key__ = "manager"

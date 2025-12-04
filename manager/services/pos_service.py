@@ -9,6 +9,7 @@ from manager.models.pos import Pos, PosClose
 from manager.models.employess import Employee
 from manager.models.sales import Sale
 from manager.models.expenses import Expense
+from manager.models.timezone import fuso
 from utils.db import db
 
 class PosService:
@@ -38,7 +39,7 @@ class PosService:
                     cash.valor = valor            
                     cash.abertura = valor            
                     cash.matricula = mat
-                    cash.data = now()
+                    cash.data = now(fuso(cr))
                     cash.cr = cr
                     db.session.add(cash)
                     db.session.commit()
@@ -66,7 +67,7 @@ class PosService:
     @check_connection
     def close(self, bd:MultiDict, hd:Headers, cr=None): # Fecha o caixa
         gc = hd.get("gc")
-        vendas = Sale.query.filter_by(cr=cr, data=now().today()).all()
+        vendas = Sale.query.filter_by(cr=cr, data=now(fuso(cr)).today()).all()
         
         dd = {'PIX':0, 'DINHEIRO':0, 'DEBITO':0, 'CREDITO':0, 'TOTAL': 0, 'DESPESAS':0, 'ABERTURA':0, "FECHAMENTO":0}
 
@@ -74,7 +75,7 @@ class PosService:
             dd[venda.pagamento] += venda.valor - venda.desconto
             dd["TOTAL"] += venda.valor - venda.desconto
         
-        saidas = Expense.query.filter_by(cr=cr, data=now().today()).all()
+        saidas = Expense.query.filter_by(cr=cr, data=now(fuso(cr)).today()).all()
         
         for saida in saidas: dd["DESPESAS"] += saida.valor
 

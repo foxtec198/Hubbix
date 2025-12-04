@@ -2,7 +2,6 @@
 from werkzeug.datastructures.structures import MultiDict
 from werkzeug.datastructures.headers import Headers
 from flask import jsonify
-from utils.check_cr import check_cr
 from utils.safe_route import check_connection, require_cr
 # Models
 from manager.models.brands import Brand, db
@@ -11,8 +10,7 @@ class BrandService:
     @check_connection
     @require_cr
     def get(self, bd:MultiDict, hd:Headers, cr= None): # Pega todas as marcas por CR
-        if check_cr(cr): return jsonify(Brand.search_by_cr(cr))
-        return jsonify("Loja Inexistente"), 401
+        return jsonify(Brand.search_by_cr(cr))
     
     @check_connection
     @require_cr

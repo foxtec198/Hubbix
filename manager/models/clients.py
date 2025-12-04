@@ -1,6 +1,5 @@
+from models.base_model import BaseModel, db
 from utils.now import dt
-from utils.db import db
-from models.base_model import BaseModel
 
 class Client(BaseModel):
     __bind_key__ = "manager" # Seta o BD como Manager

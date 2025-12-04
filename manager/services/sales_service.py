@@ -2,6 +2,7 @@ from werkzeug.datastructures.structures import MultiDict
 from werkzeug.datastructures.headers import Headers                    
 from utils.safe_route import require_cr, check_connection
 from manager.models.sales import Sale
+from manager.models.timezone import fuso
 from flask import jsonify
 from utils.check_field import check_field
 from utils.db import db
@@ -20,7 +21,7 @@ class SalesService:
         desconto = bd.get("desconto")
         pagamento = bd.get("pagamento")
         id_cliente = bd.get("id_cliente", 0) # Obtem o id do cliente, caso contrario define como 0(Não informado)
-        data = now()
+        data = now(fuso(cr))
         grupodecliente = hd.get("grupodecliente")
         cr = cr
         tipo = bd.get("tipo", "PRODUTOS")

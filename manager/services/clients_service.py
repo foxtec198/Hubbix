@@ -7,6 +7,7 @@ from flask import jsonify
 from utils.now import now
 # Models
 from manager.models.clients import Client, db
+from manager.models.timezone import fuso
 
 class ClientService:
     @check_connection
@@ -55,7 +56,7 @@ class ClientService:
             new.endereco = end
             new.imei = imei
             new.obs = obs
-            new.data = now()
+            new.data = now(fuso(cr))
             new.grupodecliente = gc
             new.cr = cr
             db.session.add(new)

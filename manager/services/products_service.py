@@ -1,4 +1,5 @@
 from manager.models.products import Product
+from manager.models.timezone import fuso
 from werkzeug.datastructures.headers import Headers
 from werkzeug.datastructures.structures import MultiDict
 from utils.safe_route import check_connection, require_cr
@@ -35,7 +36,7 @@ class ProductService:
         )
 
         if ok:
-            data = now() # Define a data atuaal 
+            data = now(fuso(cr)) # Define a data atuaal 
             prod = Product() # Cria o Modelo Produto
 
             # Seta os valores

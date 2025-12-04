@@ -3,8 +3,6 @@ from flask import jsonify
 from manager.models.employess import Employee, db
 from werkzeug.datastructures.headers import Headers
 from werkzeug.datastructures.structures import MultiDict
-from utils.check_cr import check_cr
-
 from utils.safe_route import require_cr, check_connection
 
 class EmployeeService:

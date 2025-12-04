@@ -3,9 +3,10 @@ from werkzeug.datastructures.structures import MultiDict
 from werkzeug.datastructures.headers import Headers
 from utils.safe_route import check_connection, require_cr
 from utils.check_field import check_field
-from utils.now import now, timedelta
+from utils.now import now
 from flask import jsonify
 from utils.db import db
+from manager.models.timezone import fuso
 
 class ExpenseService:
     @require_cr
@@ -30,7 +31,7 @@ class ExpenseService:
         if ok:
             expense = Expense()
             expense.valor = valor
-            expense.data = now()
+            expense.data = now(fuso(cr))
             expense.motivo = motivo
             expense.matricula = mat
             expense.cr = cr

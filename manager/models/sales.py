@@ -1,5 +1,4 @@
-from models.base_model import BaseModel
-from utils.db import db
+from models.base_model import BaseModel, db
 from sqlalchemy import cast, Date
 from utils.now import now
 

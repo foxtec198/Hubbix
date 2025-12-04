@@ -1,5 +1,4 @@
-from models.base_model import BaseModel
-from utils.db import db
+from models.base_model import BaseModel, db
 
 class Config(BaseModel):
     __bind_key__ = "manager" # Seta o BD como Manager
@@ -19,3 +18,8 @@ class Config(BaseModel):
     @classmethod
     def get(cls, cr):
         return cls.query.filter_by(cr=cr).one()
+    
+    @classmethod
+    def get_fuso(cls, cr):
+        config = cls.query.filter_by(cr=cr).one()
+        return config.fuso if config else None
