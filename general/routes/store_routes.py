@@ -4,8 +4,9 @@ from general.services.store_service import StoreService
 store_bp = Blueprint("Lojas", __name__)
 store_service = StoreService()
 
-@store_bp.route("/", methods=["GET", "POST", "pATCH", "DELETE"])
+@store_bp.route("/", methods=["GET", "POST", "PATCH", "DELETE"])
 def main():
     match rq.method:
         case "GET": return store_service.get_store_data() # Retorna os dados da loja
+        case "PATCH": return store_service.update_store(rq.get_json(), rq.headers)
     return jsonify()
