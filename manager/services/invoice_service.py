@@ -1,7 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 from utils.to_real import to_real
 from os import getcwd, path
-from models.store_model import Store
+from general.models.store import Store
 from utils.safe_route import check_connection, require_cr
 from werkzeug.datastructures import Headers, MultiDict
 from utils.db import cons

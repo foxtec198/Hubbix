@@ -20,4 +20,12 @@ def login():
 def update_logo():
     return config_service.update_logo(rq.files, rq.headers) # Atualiza o ARQUIVO da Logo
 
-@config_bp.route("/check_mat")
+@config_bp.route("/check/mat/<int:mat>", methods=["GET"]) # Verifica se a matrícula existe e se é valida
+def check_mat(mat):
+    if rq.method == "GET": return config_service.check_mat(mat, rq.headers)
+    return jsonify("Metodo nao permitido"), 405
+
+@config_bp.route("/check/cpf/<string:cpf>", methods=["GET"]) # Verifica se o cliente existe por CPF
+def check_cpf(cpf):
+    if rq.method == "GET": return config_service.check_cpf(cpf, rq.headers)
+    return jsonify("Metodo nao permitido"), 405

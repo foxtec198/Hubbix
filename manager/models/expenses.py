@@ -1,4 +1,4 @@
-from models.base_model import BaseModel, db
+from general.models.base_model import BaseModel, db
 from utils.now import dt, now, timedelta
 from sqlalchemy import func, Date, cast
 

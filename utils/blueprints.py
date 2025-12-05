@@ -10,6 +10,7 @@ from manager.routes.sales_routes import sales_bp
 from manager.routes.releases_routes import release_bp
 from manager.routes.invoice_route import invoice_bp
 from bks.routes.schedule_routes import schedule_bp
+from general.routes.store_routes import store_bp
 
 blueprints = {
     clientes_bp: "/api/manager/clientes",
@@ -24,4 +25,5 @@ blueprints = {
     invoice_bp: "/api/manager/nnf",
     release_bp: "/api/manager/saidas",
     schedule_bp: "/api/bks/",
+    store_bp: "/api/lojas",
 }

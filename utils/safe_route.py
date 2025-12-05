@@ -1,7 +1,7 @@
 from flask import jsonify, request as rq
 from functools import wraps
 from sqlalchemy.exc import OperationalError
-from models.store_model import Store
+from general.models.store import Store
 
 def check_connection(func):
     @wraps(func)

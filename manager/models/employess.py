@@ -1,4 +1,4 @@
-from models.base_model import BaseModel, db
+from general.models.base_model import BaseModel, db
 
 class Employee(BaseModel):
     __bind_key__ = "manager" # Define qual BD vamos utilizar

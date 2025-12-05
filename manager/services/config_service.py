@@ -2,8 +2,10 @@ from werkzeug.datastructures import MultiDict, Headers
 from utils.safe_route import require_cr, check_connection
 from utils.check_field import check_password_hash
 from manager.models.employess import Employee
+from manager.models.clients import Client
 from manager.models.config import Config
-from flask import jsonify, request as rq
+from general.models.store import Store
+from flask import jsonify
 from os import path, getcwd
 from utils.db import db
 
@@ -89,3 +91,16 @@ class ConfigService:
                 })
             return jsonify("Matricula nao encontrada"), 404
         return jsonify("Matricula obrigatoria"), 400
+
+    @check_connection
+    @require_cr
+    def check_cpf(self, cpf, hd:Headers, cr = None):
+        if cpf:
+            client = Client.query.filter_by(cpf=cpf, cr=cr).first()
+            if client:
+                return jsonify({
+                    "nome": client.nome,
+                    "obs": client.obs
+                })
+            return jsonify("CPF nao encontrado"), 404
+        return jsonify("CPF obrigatorio"), 400

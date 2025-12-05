@@ -17,7 +17,7 @@ from manager.models.config import Config # Configurações
 from manager.models.clients import Client # Clientes
 from manager.models.vw_os import ViewOrders as vwOS # View
 from manager.models.timezone import fuso # Get timezone Function
-from models.store_model import Store # Lojas
+from general.models.store import Store # Lojas
 
 class OrdersService:
     @check_connection

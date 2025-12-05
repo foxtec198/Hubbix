@@ -1,4 +1,4 @@
-from models.base_model import BaseModel, db
+from general.models.base_model import BaseModel, db
 
 class Release(BaseModel):
     __bind_key__ = "manager"
