@@ -9,10 +9,15 @@ from manager.routes.config_routes import config_bp
 from manager.routes.sales_routes import sales_bp
 from manager.routes.releases_routes import release_bp
 from manager.routes.invoice_route import invoice_bp
-from bks.routes.schedule_routes import schedule_bp
+
+from general.routes.email_routes import email_bp
 from general.routes.store_routes import store_bp
+from general.routes.files_routes import files_bp
+
+from bks.routes.schedule_routes import schedule_bp
 
 blueprints = {
+    # Manager
     clientes_bp: "/api/manager/clientes",
     employees_bp: "/api/manager/funcionarios",
     config_bp: "/api/manager/config",
@@ -24,6 +29,12 @@ blueprints = {
     sales_bp: "/api/manager/vendas",
     invoice_bp: "/api/manager/nnf",
     release_bp: "/api/manager/saidas",
-    schedule_bp: "/api/bks/",
+
+    # Geral
     store_bp: "/api/lojas",
+    email_bp: "/api/email",
+    files_bp: "/api/files",
+
+    # BKS
+    schedule_bp: "/api/bks/",
 }

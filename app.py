@@ -23,9 +23,9 @@ app.config["SQLALCHEMY_BINDS"] = {
 
 # Configura os params do BD
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_pre_ping": True,     # Verifica se a conexão ainda está viva
-    "pool_size": 10,           # Número de conexões abertas
-    "pool_recycle": 1800,      # Recria a conexão a cada 30 min
+    "pool_pre_ping": True, # Verifica se a conexão ainda está viva
+    "pool_size": 10, # Número de conexões abertas
+    "pool_recycle": 1800, # Recria a conexão a cada 30 min
 }
 
 # Inicia o banco de dados
