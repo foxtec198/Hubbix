@@ -19,7 +19,7 @@ class InvoiceService: # Back end das notas fiscais
 
     @check_connection
     @require_cr
-    def create(self, id:MultiDict, hd:Headers, cr = None): # Cria a nota pelo ROUTE
+    def create(self, bd:MultiDict, hd:Headers, cr = None): # Cria a nota pelo ROUTE
         id_venda = bd.get('id_venda')
         store = Store.query.filter_by(cr=cr).one()
         releases = cons(

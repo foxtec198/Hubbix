@@ -9,6 +9,7 @@ class Config(BaseModel):
     peca = db.Column(db.Boolean(), default=False)
     logo = db.Column(db.String())
     escala = db.Column(db.Integer())
+    fuso = db.Column(db.Integer())
     controle_estoque = db.Column(db.Boolean(), default=True)
     modo_caixa = db.Column(db.Boolean(), default=False)
     email_fx = db.Column(db.String(50))

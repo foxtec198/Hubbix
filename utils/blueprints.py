@@ -21,7 +21,7 @@ blueprints = {
     pos_bp: "/api/manager/caixa",
     config_bp: "/api/manager/config",
     sales_bp: "/api/manager/vendas",
-    release_bp: "/api/manager/saidas",
     invoice_bp: "/api/manager/nnf",
+    release_bp: "/api/manager/saidas",
     schedule_bp: "/api/bks/",
 }

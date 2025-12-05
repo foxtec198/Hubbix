@@ -1,5 +1,4 @@
-from werkzeug.datastructures.structures import MultiDict
-from werkzeug.datastructures.headers import Headers
+from werkzeug.datastructures import MultiDict, Headers
 from utils.safe_route import require_cr, check_connection
 from utils.check_field import check_password_hash
 from manager.models.employess import Employee
@@ -78,3 +77,15 @@ class ConfigService:
             return jsonify("Matricula nao encontrada"), 404
         return jsonify("Matricula e Senha Obrigatorios"), 400
 
+    @check_connection
+    @require_cr
+    def check_mat(self, mat, hd:Headers, cr = None):
+        if mat:
+            employee = Employee.query.filter_by(matricula=mat, cr=cr).first()
+            if employee:
+                return jsonify({
+                    "display_name": employee.nome,
+                    "perm": employee.permissao
+                })
+            return jsonify("Matricula nao encontrada"), 404
+        return jsonify("Matricula obrigatoria"), 400

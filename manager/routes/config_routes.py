@@ -19,3 +19,5 @@ def login():
 @config_bp.route("/update_logo", methods=["PATCH"])
 def update_logo():
     return config_service.update_logo(rq.files, rq.headers) # Atualiza o ARQUIVO da Logo
+
+@config_bp.route("/check_mat")

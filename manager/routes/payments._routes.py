@@ -1,5 +1,5 @@
 from flask import Blueprint, request as rq, jsonify
-from manager.services.payment_services import MPService
+from manager.services.payment_service import MPService
 
 payment_bp = Blueprint("", __name__)
 mp_service = MPService()

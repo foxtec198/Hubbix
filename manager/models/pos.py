@@ -9,6 +9,7 @@ class Pos(BaseModel):
     data = db.Column(db.DateTime)
     abertura = db.Column(db.Float)
     matricula = db.Column(db.Integer)
+    
     @classmethod
     def check(cls, cr) -> bool:
         res = Pos.query.filter_by(cr=cr).all()
@@ -18,7 +19,7 @@ class PosClose(BaseModel):
     __bind_key__ = "manager"
     __tablename__ = "caixa_fc"
     
-    id = db.Column(db.String, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     data = db.Column(db.DateTime)
     dinheiro = db.Column(db.Float)
     cartao = db.Column(db.Float)

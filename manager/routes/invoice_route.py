@@ -1,7 +1,7 @@
 from flask import Blueprint, request as rq, jsonify
-from manager.services.invoices_services import InvoiceService
+from manager.services.invoice_service import InvoiceService
 
-invoice_bp = Blueprint("invoice_route", __name__)
+invoice_bp = Blueprint("NNF", __name__)
 invoice_service = InvoiceService()
 
 @invoice_bp.route("/", methods=["POST"])
