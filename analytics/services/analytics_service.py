@@ -2,8 +2,10 @@ from werkzeug.datastructures import MultiDict, Headers
 from analytics.models.views import View
 from utils.db import db, cons
 from collections import defaultdict
-from flask import jsonify, request as rq
+from flask import jsonify
 from utils.now import now
+from utils.check_field import check_password_hash
+from analytics.models.user import User
 
 class AnalyticService:
     def get(self, bd:MultiDict, hd:Headers): # Retorna as informações para Dashboard e detalhamento de Views
@@ -81,7 +83,24 @@ class AnalyticService:
         type = bd.get("type")
         client_id = bd.get("client_id")
         unit_id = hd.get("unit_id")
-        ip = rq.headers.get('X-Forwarded-For').split(',')[0]
+        ip = hd.get('X-Forwarded-For').split(',')[0]
         data = now()
 
-    
+    def login(self, bd:MultiDict):
+        email = bd.get("email")
+        pwd = bd.get("pwd")
+        need = ["email", "pwd"]
+        falt = [camp for camp in need if not locals()[camp]]
+
+        if not falt:
+            usr = User.query.filter_by(email=email).first()
+            if usr:
+                if check_password_hash(pwd, usr.hash):
+                    return jsonify({
+                        "display_name": usr.name
+                        "unit_id": usr.unit_id
+                        "status": True,
+                    }), 200
+                return jsonify("Senha incorreta"), 401
+            return jsonify("Email incorreto"), 401
+        return jsonify(f"Faltando: {falt}"), 400

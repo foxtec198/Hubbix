@@ -8,5 +8,7 @@ prod_service = ProductService()
 def main():
     match rq.method:
         case "GET": return prod_service.get(rq.args, rq.headers)
-        case "POST": return prod_service.create(rq.get_json(), rq.headers, rq.files)
+        case "POST": return prod_service.create(rq.get_json(), rq.headers)
+        case "PATCH": return prod_service.update(rq.get_json(), rq.headers)
+        case "DELETE": return prod_service.delete(rq.args, rq.headers)
     return jsonify("Metodo não permitido"), 401

@@ -16,7 +16,7 @@ class ClientService:
         link = bd.get("link")
         unit_id = hd.get("unit_id")
         
-        need = [name, unit_id]
+        need = ["name", "unit_id"]
         falt = [camp for camp in need if not locals()[camp]]
 
         if not falt:
@@ -46,7 +46,7 @@ class ClientService:
         unit_id = hd.get("unit_id")
         client_id = bd.get("id")
 
-        need = [unit_id, client_id]
+        need = ["unit_id", "client_id"]
         falt = [camp for camp in need if not locals()[camp]]
 
         if not falt:

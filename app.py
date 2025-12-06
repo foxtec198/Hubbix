@@ -4,10 +4,12 @@ from utils.db import db
 from utils.blueprints import blueprints
 from dotenv import load_dotenv
 from os import getenv
+from flask_socketio import SocketIO
 
 load_dotenv()
 app = Flask(__name__)
 swagger = Swagger(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Seta SUPERSECRET key, lol.
 app.config["SECRET_KEY"] = getenv("KEY")
@@ -32,7 +34,8 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 db.init_app(app)
 
 # Carrega os Blueprints
-for item in blueprints: app.register_blueprint(item, url_prefix=blueprints[item])
+for bp in blueprints: app.register_blueprint(bp, url_prefix=blueprints[bp])
 
 # Modo Dev
-if __name__ == "__main__": app.run(debug=True, host="0.0.0.0", port=int(getenv("PORT", 9560)))
+if __name__ == "__main__": 
+    app.run(debug=True, host="0.0.0.0", port=int(getenv("PORT", 9560)))

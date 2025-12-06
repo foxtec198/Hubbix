@@ -4,7 +4,7 @@ from werkzeug.datastructures.headers import Headers
 from werkzeug.datastructures.structures import MultiDict
 from utils.safe_route import check_connection, require_cr
 from utils.now import now
-from flask import jsonify
+from flask import jsonify, request as rq
 from utils.check_field import check_field
 from os import path, getcwd
 from utils.db import db
@@ -17,7 +17,8 @@ class ProductService:
 
     @check_connection
     @require_cr
-    def create(self, bd:MultiDict, hd:Headers, files, cr = None): # Cria um produto
+    def create(self, bd:MultiDict, hd:Headers, cr = None): # Cria um produto
+        files = rq.files # Seta as files da requisição
         nome = bd.get("nome")
         custo = bd.get("custo")
         valor = bd.get("valor")
@@ -75,7 +76,8 @@ class ProductService:
 
     @check_connection
     @require_cr
-    def update(self, bd:MultiDict, hd:Headers, files, cr = None):
+    def update(self, bd:MultiDict, hd:Headers, cr = None):
+        files = rq.files # Seta as files da requisição
         id = bd.get("id")
         if id:
             ean = db.get("ean")
@@ -116,7 +118,8 @@ class ProductService:
     def delete(self, bd:MultiDict, hd:Headers, cr = None):
         id = bd.get("id")
         if id:
-            prod = Product.query.filter_by(cr=cr, id=id)
-            db.session.delete(prod)
-            return jsonify("Exluso com sucesso")
+            db.session.delete(Product.query.get(id))
+            db.session.commit()
+            return jsonify("Exluso com sucesso"), 200
         return jsonify("ID Obrigatório"), 400
+    

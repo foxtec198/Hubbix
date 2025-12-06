@@ -16,6 +16,10 @@ from general.routes.files_routes import files_bp
 
 from bks.routes.schedule_routes import schedule_bp
 
+from analytics.routes.users_routes import user_bp 
+from analytics.routes.analytics_routes import analytics_bp 
+from analytics.routes.clients_routes import  clients_bp
+
 blueprints = {
     # Manager
     clientes_bp: "/api/manager/clientes",
@@ -37,4 +41,9 @@ blueprints = {
 
     # BKS
     schedule_bp: "/api/bks/",
+
+    # Analytics
+    analytics_bp: "/api/analytics",
+    clients_bp: "/api/analytics/clients",
+    user_bp: "/api/analytics/users",
 }
