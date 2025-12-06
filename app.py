@@ -9,7 +9,7 @@ from flask_socketio import SocketIO
 load_dotenv()
 app = Flask(__name__)
 swagger = Swagger(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*") # Ainda nao esta em uso 
 
 # Seta SUPERSECRET key, lol.
 app.config["SECRET_KEY"] = getenv("KEY")
