@@ -7,7 +7,8 @@ db = SQLAlchemy()
 
 def cons(sql, *args, db="MANAGER", all=True):
     """db deve receveber ["MANAGER", "GOURMET", "LOJAS", "ANALYTICS"]"""
-    if type(db) == str and db: 
+    dbs = ["MANAGER", "GOURMET", "LOJAS", "ANALYTICS"]
+    if db.upper() in dbs: 
         engine = create_engine(environ[db])
         with engine.connect() as conn:
             if len(args) == 1: args = args[0]
