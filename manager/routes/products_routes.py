@@ -11,4 +11,4 @@ def main():
         case "POST": return prod_service.create(rq.get_json(), rq.headers)
         case "PATCH": return prod_service.update(rq.get_json(), rq.headers)
         case "DELETE": return prod_service.delete(rq.args, rq.headers)
-    return jsonify("Metodo não permitido"), 401
+    return jsonify("Metodo não permitido"), 405

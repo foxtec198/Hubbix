@@ -31,3 +31,17 @@ class PosClose(BaseModel):
     matricula = db.Column(db.Integer)
     grupodecliente = db.Column(db.String)
     cr = db.Column(db.String)
+
+class Items(BaseModel):
+    __bind_key__ = "manager"
+    __tablename__ = "md_items_caixa"
+
+    id = db.Column(db.Integer, primary_key=True)
+    id_item = db.Column(db.Integer)
+    ean = db.Column(db.String)
+    nome = db.Column(db.String)
+    quantidade = db.Column(db.String)
+    quantidade = db.Column(db.Integer)
+    valor = db.Column(db.Float)
+    total = db.Column(db.Float)
+    cr = db.Column(db.String)

@@ -4,12 +4,13 @@ from utils.safe_route import require_cr, check_connection
 from flask import jsonify
 from utils.now import now
 
-from manager.models.pos import Pos, PosClose
+from manager.models.pos import Pos, PosClose, Items
 from manager.models.employess import Employee
 from manager.models.sales import Sale
 from manager.models.expenses import Expense
 from manager.models.timezone import fuso
 from utils.db import db
+from manager.models.products import Product
 
 class PosService:
     @check_connection
@@ -110,4 +111,40 @@ class PosService:
             return jsonify("Caixa fechado com sucesso"), 200
         return jsonify("Matrícula é obrigatória"), 400
             
-        
+    # ===============================================================
+    # ===============================================================
+    # ====================== MODO CAIXA =============================
+    # ===============================================================
+    # ===============================================================
+
+    @check_connection
+    @require_cr
+    def get_products(self, bd:MultiDict, hd:Headers, cr=None):
+        pos_itens = Items.query.filter_by(cr=cr).all()
+        return jsonify([item.to_dict() for item in pos_itens])
+
+    @check_connection
+    @require_cr
+    def set_products(self, ean, cr=None):
+        if ean:
+            prod = Product._search_by_ean(ean)
+            items = Items.query.filter_by(ean=ean).first()
+            # Confirma se já tem um prod adicionado e adiciona a quantidade
+            if items: 
+                items.quantidade += 1
+                items.total = items.quantidade * items.valor
+            else: # Se nao tiver cria um
+                items = Items()
+                items.id_item = prod.id
+                items.ean = prod.ean
+                items.nome = prod.nome
+                items.quantidade = prod.quantidade
+                items.valor = prod.valor
+                items.total = prod.total
+                items.cr = cr
+                db.session.add(items)
+            db.session.commit()
+            
+
+
+        return jsonify("Ean obrigatorio")

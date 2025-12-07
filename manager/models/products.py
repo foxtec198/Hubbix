@@ -21,6 +21,19 @@ class Product(BaseModel):
     cr = db.Column(db.String(), nullable=False)
 
     @classmethod
-    def _search_by_cr(cls, cr):
+    def _search_by_cr(cls, cr) -> list:
         products =cls.query.filter(cls.cr==cr)
         return [prod.to_dict() for prod in products]
+        
+    @classmethod
+    def _search_by_name(cls, nome) -> list:
+        return [prod.to_dict() for prod in cls.query.filter(cls.nome == nome).all()]
+
+    @classmethod
+    def _search_by_id(cls, id) -> dict:
+        return cls.query.filter(cls.id == id).first()
+
+    @classmethod
+    def _search_by_ean(cls, ean) -> dict:
+        return cls.query.filter(cls.ean == ean).first()
+

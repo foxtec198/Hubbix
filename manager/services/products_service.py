@@ -13,7 +13,14 @@ class ProductService:
     @check_connection
     @require_cr
     def get(self, bd:MultiDict, hd:Headers, cr = None): # Obtem todos os produtos
-        return Product._search_by_cr(cr)
+        id = bd.get("id")
+        ean = bd.get("ean")
+        nome = bd.get("nome")
+
+        if id: return Product._search_by_id(id)
+        elif ean: return Product._search_by_ean(ean)
+        elif nome: return Product._search_by_name(nome)
+        else: return Product._search_by_cr(cr)
 
     @check_connection
     @require_cr
