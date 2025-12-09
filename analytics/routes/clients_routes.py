@@ -1,7 +1,7 @@
 from analytics.services.clients_service import ClientService
 from flask import Blueprint, jsonify, request as rq
 
-clients_bp = Blueprint("Clientes", __name__)
+clients_bp = Blueprint("Analytics - Clientes", __name__)
 clients_service = ClientService()
 
 @clients_bp.route("/", methods=["GET", "POST", "PATCH", "DELETE"])

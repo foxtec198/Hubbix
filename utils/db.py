@@ -24,7 +24,7 @@ def cons(sql, *args, db="MANAGER", all=True):
                 return ls
     return False
 
-def query(self, sql, *args, db="MANAGER"):
+def query(sql, *args, db="MANAGER"):
     """db deve receveber ["MANAGER", "GOURMET", "LOJAS", "ANALYTICS"]"""
     if type(db) == str and db:
         engine = create_engine(environ[db])

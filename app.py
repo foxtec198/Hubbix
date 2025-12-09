@@ -5,10 +5,12 @@ from utils.blueprints import blueprints
 from dotenv import load_dotenv
 from os import getenv
 from flask_socketio import SocketIO
+from flask_cors import CORS
 
 load_dotenv()
 app = Flask(__name__)
 swagger = Swagger(app)
+CORS(app) # CORS Policy 
 socketio = SocketIO(app, cors_allowed_origins="*") # Ainda nao esta em uso 
 
 # Seta SUPERSECRET key, lol.

@@ -9,7 +9,7 @@ from manager.models.employess import Employee
 from manager.models.sales import Sale
 from manager.models.expenses import Expense
 from manager.models.timezone import fuso
-from utils.db import db
+from utils.db import db, query
 from manager.models.products import Product
 
 class PosService:
@@ -138,13 +138,19 @@ class PosService:
                 items.id_item = prod.id
                 items.ean = prod.ean
                 items.nome = prod.nome
-                items.quantidade = prod.quantidade
+                items.quantidade = 1
                 items.valor = prod.valor
-                items.total = prod.total
+                items.total = prod.valor
                 items.cr = cr
                 db.session.add(items)
             db.session.commit()
-            
+            return jsonify("Sucesso"), 200
+        return jsonify("EAN Obrigatório"), 400
+    
+    @check_connection
+    @require_cr
+    def clean_pos(self, cr=None):
+        query("delete from md_items_caixa where cr = '%s'", cr)
+        return jsonify("Excluso com sucesso")
 
-
-        return jsonify("Ean obrigatorio")
+    

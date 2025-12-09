@@ -97,8 +97,8 @@ class AnalyticService:
             if usr:
                 if check_password_hash(pwd, usr.hash):
                     return jsonify({
-                        "display_name": usr.name
-                        "unit_id": usr.unit_id
+                        "display_name": usr.name,
+                        "unit_id": usr.unit_id,
                         "status": True,
                     }), 200
                 return jsonify("Senha incorreta"), 401
