@@ -30,6 +30,7 @@ class ReportsService:
         # Obtem a meta do dia e o ticket medio com base no mes passado
         meta_dia = cons("select sum(valor - desconto) from vendas where to_char(data, 'DD-MM-YYYY') = '%s' and cr = '%s'", (dia_meta, cr), all=False)[0]
         contagem_vendas = cons("select distinct count(id) from vendas where to_char(data, 'DD-MM-YYYY') = '%s' and cr = '%s'", (dia_meta, cr), all=False)[0]
+
         # Obtem o total de vendas no dia atual
         total_dia = cons("select sum(valor - desconto) from vendas where to_char(data, 'DD-MM-YYYY') = '%s' and cr = '%s'", (dia_atual, cr), all=False)[0]
 
@@ -39,7 +40,7 @@ class ReportsService:
         response["meta_ticket"] = meta_dia / contagem_vendas
 
         # Obtem o total de vendas por funcionario no mes
-        employee_sales = cons("select sum(valor - desconto) from vendas where cr = '%s' and matricula = %s and tp_char(data, 'MM-YYYY') = '%s'", (cr, mat, mes_atual))
+        employee_sales = cons("select sum(valor - desconto) from vendas where cr = '%s' and matricula = %s and to_char(data, 'MM-YYYY') = '%s'", (cr, mat, mes_atual))
 
         # Repassa o valor pra response
         response["func_vendas"] = employee_sales
