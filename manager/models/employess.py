@@ -9,6 +9,7 @@ class Employee(BaseModel):
     nome = db.Column(db.String(50), nullable=False)
     permissao = db.Column(db.String(), nullable=False)
     hash = db.Column(db.String(128), nullable=False)
+    photo = db.Column(db.String)
     cr = db.Column(db.String(100), nullable=False)
     grupodecliente = db.Column(db.String(100), nullable=False)
 
@@ -20,13 +21,14 @@ class Employee(BaseModel):
             employees.append({
                 "nome": employee.nome,
                 "matricula": employee.matricula,
-                "perm": employee.permissao
+                "perm": employee.permissao,
+                "img": employee.photo
             })
         return employees
 
     @classmethod
     def _search_by_mat(cls, mat, cr):
-        return cls.query.filter_by(matricula=mat, cr=cr).one()
+        return cls.query.filter_by(matricula=mat, cr=cr).first()
 
 
         

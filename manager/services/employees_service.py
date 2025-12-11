@@ -16,8 +16,10 @@ class EmployeeService:
                 return jsonify({
                     "nome": emp.nome,
                     "matricula": emp.matricula,
-                    "perm": emp.permissao
-                })
+                    "perm": emp.permissao,
+                    "img": emp.photo
+                }), 200
+            return jsonify("Funcionario nao encontrado"), 404
         return jsonify(Employee._search_by_cr(cr)), 200
         
     @check_connection

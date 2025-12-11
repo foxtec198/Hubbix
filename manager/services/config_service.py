@@ -63,7 +63,7 @@ class ConfigService:
         pwd = bd.get("pwd")
 
         if mat and pwd: 
-            employee = Employee.query.filter_by(matricula=mat).one()
+            employee = Employee.query.filter_by(matricula=mat).first()
             if employee:
                 if check_password_hash(pwd, employee.hash):
                     config = Config.get(employee.cr)

@@ -1,6 +1,8 @@
 from werkzeug.datastructures import MultiDict, Headers
 from utils.safe_route import check_connection, require_cr
 from general.models.store import Store
+from manager.models.config import Config
+# frmo gourmet.models.config import Config as GConfig
 from flask import jsonify
 from utils.db import db
 
@@ -9,7 +11,15 @@ class StoreService:
     @require_cr
     def get_store_data(self, cr=None): # Retorna os dados da Loja
         store = Store.query.filter_by(cr=cr).first()
-        if store: return jsonify(store.to_dict())
+        if store: 
+            # config = Config.query.filter_by(cr=cr).first() | GConfig.query.filter_by(cr=cr).first()
+            config = Config.query.filter_by(cr=cr).first()
+            if config:
+                return jsonify({
+                    "loja": store.to_dict(),
+                    "logo": config.logo
+                })
+            return jsonify("Configuração nao encontrada"), 404
         return jsonify("Loja nao encontrada"), 404
 
     @check_connection
