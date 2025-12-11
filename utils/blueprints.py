@@ -10,6 +10,7 @@ from manager.routes.sales_routes import sales_bp
 from manager.routes.releases_routes import release_bp
 from manager.routes.invoice_route import invoice_bp
 from manager.routes.reports_routes import reports_bp
+from manager.routes.parts_routes import parts_bp
 
 from general.routes.email_routes import email_bp
 from general.routes.store_routes import store_bp
@@ -35,6 +36,7 @@ blueprints = {
     invoice_bp: "/api/manager/nnf",
     release_bp: "/api/manager/saidas",
     reports_bp: "/api/manager/dashboards",
+    parts_bp: "/api/manager/pecas",
 
     # Geral
     store_bp: "/api/lojas",
