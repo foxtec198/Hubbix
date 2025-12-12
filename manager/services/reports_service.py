@@ -3,49 +3,77 @@ from utils.safe_route import require_cr, check_connection
 from utils.db import cons
 from utils.now import now, timedelta
 from flask import jsonify
+from statistics import mean
+from manager.models.sales import Sale
+from collections import defaultdict
+from dateutil.relativedelta import relativedelta
 
 @check_connection
 class ReportsService:
     @require_cr
     def get_reports_welcome_screen(self, bd:MultiDict, hd:Headers, cr=None):
-        # =================== Vars
-        response = {}
-        data = now()
-        mes_atual = f"{data.month}-{data.year}"
-        mes_meta = f"{data.month - 1}-{data.year}"
-        dia_atual = f"{data.day}-{data.month}-{data.year}"
-        dia_meta = f"{data.day-1}-{data.month - 1}-{data.year}"
-        mat = bd.get("mat")
+        mat = int(bd.get("mat")) # Matricula
+        if mat:
+            # =================== Vars
+            data = now() # Data atual
+            mes_passado = data - relativedelta(months=1) # Data do mes anterior
+            meta_dia = defaultdict(int) # Metas dos dias
+            meta_mes = defaultdict(int) # Metas dos meses
+            payments = defaultdict(int) # Metodos de pagamentos
+            real_mes = 0 
+            real_dia = 0
+            cont_vendas = 0
+            total_vendas = 0
+            meta_clientes = 0
+            real_clientes = 0
+            real_func = 0
+            sales = Sale.query.filter_by(cr=cr).all()
 
-        # =================== Consultas
-        # Obtem a meta referente ao mes passado
-        meta_mes = cons("select sum(valor - desconto) from vendas where to_char(data, 'MM-YYYY') = '%s' and cr = '%s'", (mes_meta, cr), all=False)[0]
-        # Obtem o valor de venda atual
-        total_mes = cons("select sum(valor - desconto) from vendas where to_char(data, 'MM-YYYY') = '%s' and cr = '%s'", (mes_atual, cr), all=False)[0]
+            # =================== Logica
+            for sale in sales:
+                # REFERENTE AO ANO
+                if sale.data.year == data.year: 
+                    meta_mes[sale.data.month] += sale.valor - sale.desconto # Metas dos meses
 
-        # Seta na response os valores
-        response["meta_mes"] = meta_mes if meta_mes else 0
-        response["total_mes"] = total_mes if total_mes else 0
+                # REFERENTE AO MES ATUAL
+                if sale.data.month == data.month and sale.data.year == data.year: 
+                    real_mes += sale.valor - sale.desconto # Real no Mes
+                    real_clientes += 1 # Real de Clientes
+                    if sale.matricula == mat: real_func += sale.valor - sale.desconto # Vendas por funcionario
+                    payments[sale.pagamento] += sale.valor - sale.desconto # Pega os metodos pagamentos
 
-        # Obtem a meta do dia e o ticket medio com base no mes passado
-        meta_dia = cons("select sum(valor - desconto) from vendas where to_char(data, 'DD-MM-YYYY') = '%s' and cr = '%s'", (dia_meta, cr), all=False)[0]
-        contagem_vendas = cons("select distinct count(id) from vendas where to_char(data, 'DD-MM-YYYY') = '%s' and cr = '%s'", (dia_meta, cr), all=False)[0]
+                # REFERENTE A MES PASSADO   
+                if sale.data.month == mes_passado.month and sale.data.year == mes_passado.year: 
+                    meta_dia[sale.data.day] += sale.valor - sale.desconto # Metas dos diaa
+                    meta_clientes += 1 # Meta de atendimento de clientes
 
-        # Obtem o total de vendas no dia atual
-        total_dia = cons("select sum(valor - desconto) from vendas where to_char(data, 'DD-MM-YYYY') = '%s' and cr = '%s'", (dia_atual, cr), all=False)[0]
+                # REFERENTE AO DIA ATUAL
+                if sale.data.date() == data.date(): 
+                    real_dia += sale.valor - sale.desconto # O real di dua
+                
+                # Todos os periodos
+                cont_vendas += 1
+                total_vendas += sale.valor - sale.desconto
+            media_meta_dia = mean(meta_dia.values())
+            media_meta_mes = mean(meta_mes.values())
+            meta_ticket_medio = total_vendas / cont_vendas
 
-        # Seta na response os valores
-        response["meta_dia"] = meta_dia if meta_dia else 0
-        response["total_dia"] = total_dia if total_dia else 0
-        response["meta_ticket"] = meta_dia / contagem_vendas
-
-        # Obtem o total de vendas por funcionario no mes
-        employee_sales = cons("select sum(valor - desconto) from vendas where cr = '%s' and matricula = %s and to_char(data, 'MM-YYYY') = '%s'", (cr, mat, mes_atual))
-
-        # Repassa o valor pra response
-        response["func_vendas"] = employee_sales
-
-        # =================== Retorno
-        return jsonify(response)
+            # =================== Seta na response as metricas
+            return jsonify({
+                "metas": {
+                    "dia": media_meta_dia,
+                    "mes": media_meta_mes,
+                    "clientes": meta_clientes,
+                    "ticket": meta_ticket_medio
+                },
+                "real": {
+                    "dia": real_dia,
+                    "mes": real_mes,
+                    "clientes": real_clientes,
+                    "func": real_func,
+                    "pagamentos": payments
+                }
+            }), 200
+        return jsonify("Matricula Obrigatória"), 400
 
 
