@@ -11,6 +11,7 @@ from manager.routes.releases_routes import release_bp
 from manager.routes.invoice_route import invoice_bp
 from manager.routes.reports_routes import reports_bp
 from manager.routes.parts_routes import parts_bp
+from manager.routes.expenses_routes import expenses_bp
 
 from general.routes.email_routes import email_bp
 from general.routes.store_routes import store_bp
@@ -37,6 +38,7 @@ blueprints = {
     release_bp: "/api/manager/saidas",
     reports_bp: "/api/manager/dashboards",
     parts_bp: "/api/manager/pecas",
+    expenses_bp: "/api/manager/despesas",
 
     # Geral
     store_bp: "/api/lojas",

@@ -38,31 +38,36 @@ class ReportsService:
                 # REFERENTE AO MES ATUAL
                 if sale.data.month == data.month and sale.data.year == data.year: 
                     real_mes += sale.valor - sale.desconto # Real no Mes
-                    real_clientes += 1 # Real de Clientes
                     if sale.matricula == mat: real_func += sale.valor - sale.desconto # Vendas por funcionario
                     payments[sale.pagamento] += sale.valor - sale.desconto # Pega os metodos pagamentos
 
                 # REFERENTE A MES PASSADO   
                 if sale.data.month == mes_passado.month and sale.data.year == mes_passado.year: 
                     meta_dia[sale.data.day] += sale.valor - sale.desconto # Metas dos diaa
+
+                # REFERENTE AO DIA DO MES ANTERIOR
+                if sale.data.date() == mes_passado.date(): 
                     meta_clientes += 1 # Meta de atendimento de clientes
 
                 # REFERENTE AO DIA ATUAL
                 if sale.data.date() == data.date(): 
                     real_dia += sale.valor - sale.desconto # O real di dua
+                    real_clientes += 1 # Real de Clientes
                 
                 # Todos os periodos
                 cont_vendas += 1
                 total_vendas += sale.valor - sale.desconto
-            media_meta_dia = mean(meta_dia.values())
-            media_meta_mes = mean(meta_mes.values())
+
+            if meta_dia: media_meta_dia = mean(meta_dia.values())
+            if meta_mes: media_meta_mes = mean(meta_mes.values())
             meta_ticket_medio = total_vendas / cont_vendas
 
             # =================== Seta na response as metricas
+            print(real_mes)
             return jsonify({
                 "metas": {
-                    "dia": media_meta_dia,
-                    "mes": media_meta_mes,
+                    "dia": media_meta_dia if meta_dia else 0,
+                    "mes": media_meta_mes if meta_mes else 0,
                     "clientes": meta_clientes,
                     "ticket": meta_ticket_medio
                 },
