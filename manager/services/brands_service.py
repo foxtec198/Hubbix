@@ -7,15 +7,15 @@ from utils.safe_route import check_connection, require_cr
 class BrandService:
     @check_connection
     @require_cr
-    def get(self, bd:MultiDict, cr= None) -> tuple:
+    def get(self, bd:MultiDict, cr= None):
         """
         Docstring for get
         
-        :param bd: Body(Arguments) passado com ID (não Obrigatorio)
+        :param bd: Body(Argumentos) passado com ID (não Obrigatorio)
         :type bd: MultiDict
-        :param cr: Credencial da Loja passada no Header
+        :param cr: Credencial da Loja passada no Header (Não declarar na função)
         :return: (JSON, CODE)
-        :rtype: tuple
+        :rtype: tuple[Response, Literal[404]] | tuple[Response, Literal[200]]
         """
         id = bd.get("id") # Busca o id da Marca
         if id: # Confere se foi declardao o id
@@ -32,19 +32,16 @@ class BrandService:
         
         :param bd: Body(JSON) passado para que seja feita a criação
         :type bd: MultiDict
-        :param cr: Credencial da Loja passada no Header
+        :param cr: Credencial da Loja passada no Header (Não declarar na função)
         :return: (JSON, CODE)
-        :rtype: tuple
+        :rtype: tuple[Response, Literal[400]] | tuple[Response, Literal[201]]
         """
         name = bd.get("nome") # Nome da Marca
         if name: # Confirma se foi passado o nome
             brand = Brand(nome = name,cr = cr) # Cria o registro no Banco de Dados
             db.session.add(brand) # Adiciona o registro
             db.session.commit() # Salva os dados
-            return jsonify({ # Retorna CREATED, com o id da marca
-                "msg": f"{brand.nome} criada com sucesso!",
-                "id": brand.id
-            }), 201
+            return jsonify({ "msg": f"{brand.nome} criada com sucesso!", "id": brand.id }), 201 # Retorna CREATED, com o id da marca
         return jsonify("Nome obrigatório"), 400 # Retorna BAD REQUEST - Caso falte algum dado obrigatorio
     
     @require_cr
@@ -55,9 +52,9 @@ class BrandService:
         
         :param bd: Body(JSON) passado para fazer atualização
         :type bd: MultiDict
-        :param cr: Credencial da Loja passada no Header
+        :param cr: Credencial da Loja passada no Header (Não declarar na função)
         :return: (JSON, CODE)
-        :rtype: tuple
+        :rtype: tuple[Response, Literal[404]] | tuple[Response, Literal[200]] | tuple[Response, Literal[400]]
         """
         id = bd.get("id") # Busca o id da marca a ser alterada
         nome = bd.get("nome") # Nome a ser alterado
@@ -77,11 +74,11 @@ class BrandService:
         """
         Docstring for delete
         
-        :param bd: Body ou Argumento que deve ser passado
+        :param bd: Body(Argumentos) que deve ser passado o ID da marca (Obrigatorio)
         :type bd: MultiDict
-        :param cr: Credencial da Loja passada no Header
+        :param cr: Credencial da Loja passada no Header (Não declarar na função)
         :return: (JSON, CODE)
-        :rtype: tuple
+        :rtype: tuple[Response, Literal[200]] | tuple[Response, Literal[400]]
         """
         id = bd.get("id") # Busca o ID da MArca
         if id: # Confere se o id foi declarado

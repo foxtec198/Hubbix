@@ -16,7 +16,7 @@ class ClientService:
         
         :param bd: Body(Argumentos) passado opcionalemnte
         :type bd: MultiDict
-        :param cr: Credecial de Loja passado no Header por obrigatório (Declare apenas no Header na função não!)
+        :param cr: Credecial de Loja passado no Header por obrigatório (Não declarar na função)
         :return: (JSON, CODE)
         :rtype: tuple[Response, Literal[404]] | tuple[Response, Literal[200]]
         """
@@ -38,7 +38,7 @@ class ClientService:
         :type bd: MultiDict
         :param hd: Headers onde deve ser declarado o CR e o GC como obrigatórios
         :type hd: Headers
-        :param cr: Credecial de Loja passado no Header por obrigatório (Declare apenas no Header na função não!)
+        :param cr: Credecial de Loja passado no Header por obrigatório (Não declarar na função)
         :return: (JSON, CODE)
         :rtype: tuple[Response, Literal[201]] | tuple[Response, Literal[400]]
         """
@@ -96,7 +96,7 @@ class ClientService:
         
         :param bd: Body(JSON) passado com os dados a serem utilizados
         :type bd: MultiDict
-        :param cr: Credecial de Loja passado no Header por obrigatório (Declare apenas no Header na função não!)
+        :param cr: Credecial de Loja passado no Header por obrigatório (Não declarar na função)
         :return: (JSON, CODE)
         :rtype: tuple[Response, Literal[200]] | tuple[Response, Literal[404]] | tuple[Response, Literal[400]]
 
