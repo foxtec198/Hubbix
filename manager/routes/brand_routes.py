@@ -1,4 +1,4 @@
-from flask import Blueprint, request as rq, jsonify
+from flask import Blueprint, request as rq
 from manager.services.brands_service import BrandService
 
 brand_bp = Blueprint("Marcas", __name__)
@@ -11,4 +11,4 @@ def main():
         case "POST": return brand_service.create(rq.get_json()) # Cria uma nova marca
         case "PATCH": return brand_service.update(rq.get_json()) # Atualiza o nome da marca
         case "DELETE": return brand_service.delete(rq.args) # Deleta uma marca
-    return jsonify("Metodo não permitido"), 405
+        

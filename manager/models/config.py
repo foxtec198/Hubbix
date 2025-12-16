@@ -18,9 +18,9 @@ class Config(BaseModel):
 
     @classmethod
     def get(cls, cr):
-        return cls.query.filter_by(cr=cr).one()
+        return cls.query.filter_by(cr=cr).first()
     
     @classmethod
     def get_fuso(cls, cr):
-        config = cls.query.filter_by(cr=cr).one()
-        return config.fuso if config else None
+        config = cls.query.filter_by(cr=cr).first() # Obtem a config por loja
+        return config.fuso if config else -3 # Retorna o fuso horario da loja ou -3 como padrão
