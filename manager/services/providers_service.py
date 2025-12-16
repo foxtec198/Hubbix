@@ -47,7 +47,7 @@ class ProviderService:
 
     @check_connection
     @require_cr
-    def update(self, bd:MultiDict, hd:Headers, cr=None) -> tuple:
+    def update(self, bd:MultiDict, cr=None) -> tuple:
         # ================= Dados a serem atualizados!!!
         id = bd.get("id") # ID do Fornecedor
         nome = bd.get("nome") # Nome do Fornecedor
@@ -66,10 +66,10 @@ class ProviderService:
 
     @check_connection
     @require_cr
-    def delete(self, bd:MultiDict, hd:Headers, cr=None) -> tuple:
-        id = bd.get("id")
-        if id:
-            db.session.delete(Provider.get(id))
-            db.session.commit()
-            return jsonify("Fornecedor excluso com sucesso"), 200
-        return jsonify("ID Obrigatorio"), 400
+    def delete(self, bd:MultiDict, cr=None) -> tuple:
+        id = bd.get("id") # Obtem o id 
+        if id: # Confere se foi declarado
+            db.session.delete(Provider.get(id)) # Deleta o fornecedor
+            db.session.commit() # Salva as altterações
+            return jsonify("Fornecedor removido"), 200 # Retorna sucesso 
+        return jsonify("ID Obrigatorio"), 400 # Retorna BAD REQUEST - 400
