@@ -9,5 +9,9 @@ class Brand(BaseModel):
     cr = db.Column(db.String(),  nullable=False)
     
     @classmethod
-    def search_by_cr(cls, cr):
-        return [c.to_dict() for c in cls.query.filter_by(cr=cr).all()]
+    def _search_by_cr(brand, cr) -> list:
+        return [b.to_dict() for b in brand.query.filter(brand.cr == cr).all()]
+
+    @classmethod
+    def get_brand(brand, cr, id) -> list:
+        return brand.query.filter(brand.cr == cr, brand.id == id).first()

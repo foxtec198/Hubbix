@@ -19,3 +19,16 @@ class Client(BaseModel):
     data = db.Column(db.DateTime, default=dt.utcnow)
     grupodecliente = db.Column(db.String())
     cr = db.Column(db.String())
+
+    @classmethod
+    def get_client(client, cr, id):
+        return client.query.filter(client.cr == cr, client.id == id).first()
+
+    @classmethod
+    def _search_by_cpf(client, cr, cpf):
+        return client.query.filter(client.cr == cr, client.cpf == id).first()
+
+    @classmethod
+    def _search_by_cr(client, cr) -> list:
+        clients = client.query.filter(client.cr == cr).all()
+        return [client.to_dict() for client in clients]

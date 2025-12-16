@@ -1,64 +1,92 @@
 # Utils
-from werkzeug.datastructures.structures import MultiDict
-from werkzeug.datastructures.headers import Headers
+from werkzeug.datastructures import MultiDict
+from manager.models.brands import Brand, db
 from flask import jsonify
 from utils.safe_route import check_connection, require_cr
-# Models
-from manager.models.brands import Brand, db
 
 class BrandService:
     @check_connection
     @require_cr
-    def get(self, bd:MultiDict, hd:Headers, cr= None): # Pega todas as marcas por CR
-        return jsonify(Brand.search_by_cr(cr))
+    def get(self, bd:MultiDict, cr= None) -> tuple:
+        """
+        Docstring for get
+        
+        :param bd: Body(Arguments) passado com ID (não Obrigatorio)
+        :type bd: MultiDict
+        :param cr: Credencial da Loja passada no Header
+        :return: (JSON, CODE)
+        :rtype: tuple
+        """
+        id = bd.get("id") # Busca o id da Marca
+        if id: # Confere se foi declardao o id
+            brand = Brand.get_brand(cr, id) # Pega a marca por ID
+            if brand: return jsonify(brand.to_dict()), 200 # Retorna os dados da marca por id
+            return jsonify("Marca não encontrada"), 404 # Retorna NOT FOUND - 404
+        return jsonify(Brand._search_by_cr(cr)), 200 # Retorna as marcas por loja, caso nao declarado o id
     
     @check_connection
     @require_cr
-    def create(self, bd:MultiDict, hd:Headers, cr = None): # Cria uma marca por CR
-        name = bd.get("nome") 
-        brand = Brand()
+    def create(self, bd:MultiDict, cr = None) -> tuple: 
+        """
+        Docstring for create
+        
+        :param bd: Body(JSON) passado para que seja feita a criação
+        :type bd: MultiDict
+        :param cr: Credencial da Loja passada no Header
+        :return: (JSON, CODE)
+        :rtype: tuple
+        """
+        name = bd.get("nome") # Nome da Marca
         if name: # Confirma se foi passado o nome
-            brand.nome = name
-            brand.cr = cr
-            db.session.add(brand)
-            db.session.commit()
-            return jsonify({
+            brand = Brand(nome = name,cr = cr) # Cria o registro no Banco de Dados
+            db.session.add(brand) # Adiciona o registro
+            db.session.commit() # Salva os dados
+            return jsonify({ # Retorna CREATED, com o id da marca
                 "msg": f"{brand.nome} criada com sucesso!",
-                "ok": True,
                 "id": brand.id
             }), 201
-        return jsonify("Nome obrigatório"), 400
+        return jsonify("Nome obrigatório"), 400 # Retorna BAD REQUEST - Caso falte algum dado obrigatorio
     
     @require_cr
     @check_connection
-    def update(self, bd:MultiDict, hd:Headers, cr = None): # Atualiza o nome de uma marca por ID
-        id = bd.get("id")
-        if id: 
-            brand = Brand.query.filter_by(id=id, cr=cr).one()
-            if brand:
-                nome = bd.get("nome", "")
-                if nome: brand.nome = nome
-                db.session.commit()
-                return jsonify({
-                    "msg": "Atualizado com sucesso",
-                    "ok": False
-                }), 401
-            return jsonify("Marca não encontrada"), 400
-        return jsonify("ID Obrigatorio"), 400
+    def update(self, bd:MultiDict, cr = None) -> tuple: 
+        """
+        Docstring for update
+        
+        :param bd: Body(JSON) passado para fazer atualização
+        :type bd: MultiDict
+        :param cr: Credencial da Loja passada no Header
+        :return: (JSON, CODE)
+        :rtype: tuple
+        """
+        id = bd.get("id") # Busca o id da marca a ser alterada
+        nome = bd.get("nome") # Nome a ser alterado
+
+        if id: # Confere se o id foi declarado
+            brand = Brand.get_brand(cr, id) # Busca a marca por ID e Loja
+            if brand: # Caso seja encontrado
+                if nome: brand.nome = nome # Altera caso tenha sido declarado o nome
+                db.session.commit() # Salva os dados no Banco
+                return jsonify("Marca Atualizada"), 200 # Retorna sucesso
+            return jsonify("Marca não encontrada"), 404 # Retorna NOT FOUND - 404
+        return jsonify("ID Obrigatorio"), 400 # Retorna BAD REQUEST - 400
     
     @require_cr
     @check_connection
-    def delete(self, bd:MultiDict, hd:Headers, cr = None): # DEleta uma marca especfica por ID
-        id = bd.get("id")
-        if id:
-            brand = Brand.query.get(id)
-            if brand:
-                db.session.delete(brand)
-                db.session.commit()
-                return jsonify({
-                    "msg": "Removido com sucesso",
-                    "ok": True
-                })
-            return jsonify("Marca não encontrada"), 400
-        return jsonify("ID Obrigatorio"), 400
+    def delete(self, bd:MultiDict, cr = None) -> tuple: 
+        """
+        Docstring for delete
+        
+        :param bd: Body ou Argumento que deve ser passado
+        :type bd: MultiDict
+        :param cr: Credencial da Loja passada no Header
+        :return: (JSON, CODE)
+        :rtype: tuple
+        """
+        id = bd.get("id") # Busca o ID da MArca
+        if id: # Confere se o id foi declarado
+            db.session.delete(Brand.query.get(id)) # Deleta a marca
+            db.session.commit() # Salva os dados no Banco
+            return jsonify("Marca removida"), 200 # Retorna sucesso
+        return jsonify("ID Obrigatorio"), 400 # Retorna BAD REQUEST - 400
     
