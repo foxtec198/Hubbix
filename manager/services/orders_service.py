@@ -15,7 +15,7 @@ from manager.models.pos import Pos # Caixa
 from manager.models.employess import Employee # Funcionarios
 from manager.models.config import Config # Configurações
 from manager.models.clients import Client # Clientes
-from manager.models.vw_os import ViewOrders as vwOS # View
+from manager.views.vw_os import ViewOrders as vwOS # View
 from manager.models.timezone import fuso # Get timezone Function
 from general.models.store import Store # Lojas
 

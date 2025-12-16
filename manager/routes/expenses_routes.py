@@ -8,6 +8,6 @@ expense_service = ExpenseService()
 def main():
     match rq.method:
         case "GET": return expense_service.get(rq.args) # Retorna os valores 
-        case "POST": return expense_service.create(rq.get_json(), rq.headers) # Cria uma despesa
-        case "PATCH": return expense_service.update(rq.get_json(), rq.headers) # Altera os dados da despesa
-        case "DELETE": return expense_service.delete(rq.args, rq.headers) # Remove a despesa
+        case "POST": return expense_service.create(rq.get_json()) # Cria uma despesa
+        case "PATCH": return expense_service.update(rq.get_json()) # Altera os dados da despesa
+        case "DELETE": return expense_service.delete(rq.args) # Remove a despesa

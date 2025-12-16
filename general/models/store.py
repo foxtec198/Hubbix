@@ -30,6 +30,10 @@ class Store(BaseModel):
     ramo = db.Column(db.String)
 
     @classmethod
+    def _search_by_cr(store, cr):
+        return store.query.filter(store.cr == cr).first()
+        
+    @classmethod
     def check_cr(cls, cr) -> bool:
         check = Store.query.filter(Store.cr == cr).all()
         if check: return True
