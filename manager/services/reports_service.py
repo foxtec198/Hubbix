@@ -7,11 +7,14 @@ from statistics import mean
 from manager.models.sales import Sale
 from collections import defaultdict
 from dateutil.relativedelta import relativedelta
+from utils.db import db
+from manager.models.timezone import fuso
+from sqlalchemy import func
 
-@check_connection
 class ReportsService:
+    @check_connection
     @require_cr
-    def get_reports_welcome_screen(self, bd:MultiDict, hd:Headers, cr=None):
+    def get_reports_welcome_screen(self, bd:MultiDict, cr=None):
         mat = int(bd.get("mat")) # Matricula
         if mat:
             # =================== Vars
@@ -81,4 +84,35 @@ class ReportsService:
             }), 200
         return jsonify("Matricula Obrigatória"), 400
 
-
+    @check_connection
+    @require_cr
+    def get_reports_payments_screen(self, bd:MultiDict, cr=None):
+        filter = bd.get("filter") # Pega o filtro de resposta
+        date = now(fuso(cr)) # Data atual de acordp com o timezone da loja
+        res = defaultdict(int) # Reponse esperada
+        if filter:
+            # ============== DATA
+            match filter:
+                case "day":
+                    init_date = date.replace(hour=0, minute=0, second=0) # Define a hora de inicio
+                    end_date = date.replace(hour=23, minute=59, second=59) # Define a hora final do filtro
+                case "week":
+                    init_date = date.replace(day=date.day - 7 ,hour=0, minute=0, second=0) # Define a hora de inicio
+                    end_date = date.replace(hour=23, minute=59, second=59) # Defina a hora final do filtro
+                case "month":
+                    init_date = date.replace(day=1, hour=0, minute=0, second=0) # Define a hora de inicio
+                    end_date = date.replace(hour=23, minute=59, second=59) # Defina a hora final do filtro
+                    
+            # ============== CONSULTA
+            payments = db.session.query( Sale.pagamento, Sale.tipo, func.sum(Sale.id).label("soma"), func.count(Sale.id).label("total") # SELECT
+            ).filter( Sale.cr == cr, Sale.data >= init_date, Sale.data < end_date, # WHERE
+            ).group_by( Sale.pagamento, Sale.tipo # GROUP BY
+            ).all() # Obtem todos os registros de acordo com a consultaa
+            for payment in payments: # Itera sobre a response
+                res["orders"] += payment.sum if payment.tipo == "OS" else ... # Venda por Ordem de Serviço
+                res["produtos"] += payment.sum if payment.tipo == "PRODUTOS" else ... # Venda por produto
+                res[payment.pagamento.lower()] += payment.soma # Adiciona o total por tipo
+                res["total"] += payment.sum # Adiciona o total dos metodos de pagamento
+                res["total_count"] += payment.total # Total de vendas em contagem
+            return jsonify(res), 200 # Retorna Sucesso 200
+        return jsonify("Filtro obrigatorio"), 400 # Retorna BAD REQUEST - 400
