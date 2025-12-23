@@ -49,6 +49,7 @@ class Expense(BaseModel):
 
         # Retorna as despesas
         return [e.to_dict() for e in expenses] 
+        
     
     @classmethod
     def _search_by_id(expense, cr, id):

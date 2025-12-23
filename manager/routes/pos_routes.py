@@ -4,6 +4,7 @@ from manager.services.pos_service import PosService
 pos_bp = Blueprint("Caixa", __name__)
 pos_service = PosService()
 
+@pos_bp.route("", methods=['GET', 'POST', 'PATCH', 'DELETE'])
 @pos_bp.route("/", methods=['GET', 'POST', 'PATCH', 'DELETE'])
 def main():
     match rq.method:
@@ -13,6 +14,8 @@ def main():
         case "DELETE": return pos_service.close(rq.args, rq.headers)
     return jsonify("Metodo não permitido"), 500
 
+@pos_bp.route("/last_closed")
+def check(): return pos_service.last_close()
 
 @pos_bp.route("/mode", methods=["GET", "POST", "DELETE"])
 def mode():

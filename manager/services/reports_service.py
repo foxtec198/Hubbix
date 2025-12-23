@@ -1,15 +1,15 @@
-from werkzeug.datastructures import MultiDict, Headers
+from werkzeug.datastructures import MultiDict
 from utils.safe_route import require_cr, check_connection
-from utils.db import cons
-from utils.now import now, timedelta
+from utils.now import now
 from flask import jsonify
 from statistics import mean
-from manager.models.sales import Sale
 from collections import defaultdict
 from dateutil.relativedelta import relativedelta
 from utils.db import db
 from manager.models.timezone import fuso
 from sqlalchemy import func
+from manager.models.sales import Sale
+from manager.models.pos import Pos
 
 class ReportsService:
     @check_connection
@@ -66,7 +66,6 @@ class ReportsService:
             meta_ticket_medio = total_vendas / cont_vendas
 
             # =================== Seta na response as metricas
-            print(real_mes)
             return jsonify({
                 "metas": {
                     "dia": media_meta_dia if meta_dia else 0,
@@ -84,12 +83,13 @@ class ReportsService:
             }), 200
         return jsonify("Matricula Obrigatória"), 400
 
-    @check_connection
+    # @check_connection
     @require_cr
     def get_reports_payments_screen(self, bd:MultiDict, cr=None):
         filter = bd.get("filter") # Pega o filtro de resposta
         date = now(fuso(cr)) # Data atual de acordp com o timezone da loja
         res = defaultdict(int) # Reponse esperada
+        res["payments"] = defaultdict(int)
         if filter:
             # ============== DATA
             match filter:
@@ -104,15 +104,19 @@ class ReportsService:
                     end_date = date.replace(hour=23, minute=59, second=59) # Defina a hora final do filtro
                     
             # ============== CONSULTA
-            payments = db.session.query( Sale.pagamento, Sale.tipo, func.sum(Sale.id).label("soma"), func.count(Sale.id).label("total") # SELECT
+            payments = db.session.query( Sale.pagamento, Sale.tipo, func.sum(Sale.valor - Sale.desconto).label("soma"), func.count(Sale.id).label("total") # SELECT
             ).filter( Sale.cr == cr, Sale.data >= init_date, Sale.data < end_date, # WHERE
             ).group_by( Sale.pagamento, Sale.tipo # GROUP BY
             ).all() # Obtem todos os registros de acordo com a consultaa
+            pos = Pos.query.filter_by(cr=cr).first()
             for payment in payments: # Itera sobre a response
-                res["orders"] += payment.sum if payment.tipo == "OS" else ... # Venda por Ordem de Serviço
-                res["produtos"] += payment.sum if payment.tipo == "PRODUTOS" else ... # Venda por produto
-                res[payment.pagamento.lower()] += payment.soma # Adiciona o total por tipo
-                res["total"] += payment.sum # Adiciona o total dos metodos de pagamento
+                res["orders"] += payment.soma if payment.tipo == "OS" else 0 # Total do valor de ORDENS DE SERVIÇO
+                res["orders_count"] += payment.total if payment.tipo == "OS" else 0 # Total de contagem de OS
+                res["products"] += payment.soma if payment.tipo == "PRODUTOS" else 0 # Total do valor de PRODUTOS
+                res["product_count"] += payment.total if payment.tipo == "PRODUTOS" else 0 # Total de contagem
+                res["payments"][payment.pagamento.lower()] += payment.soma # Adiciona o total por tipo
+                res["total"] += payment.soma # Adiciona o total dos metodos de pagamento
                 res["total_count"] += payment.total # Total de vendas em contagem
+                res["opening"] = pos.abertura if pos else "Fechado"
             return jsonify(res), 200 # Retorna Sucesso 200
         return jsonify("Filtro obrigatorio"), 400 # Retorna BAD REQUEST - 400

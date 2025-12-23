@@ -33,39 +33,41 @@ class PosService:
     @check_connection 
     @require_cr
     def open(self, bd:MultiDict, hd:Headers, cr=None): # Abre o caixa se ná não estiver aberto
-        if not Pos.query.filter_by(cr=cr).first():
-            mat = bd.get("mat")
-            emp = Employee._search_by_mat(mat, cr)
-            if emp.permissao == "ADMIN":
-                valor = bd.get("valor", 0)
-                if valor > 0:
-                    cash = Pos()
-                    cash.valor = valor            
-                    cash.abertura = valor            
-                    cash.matricula = mat
-                    cash.data = now(fuso(cr))
-                    cash.cr = cr
-                    db.session.add(cash)
-                    db.session.commit()
-                    return jsonify("Caixa aberto com sucesso!"), 200
-                return jsonify("Valor precisa ser maior que zero!"), 400
-            return jsonify("Você não tem permissão!"), 401
-        return jsonify("Caixa já aberto"), 401
+        mat = bd.get("mat")
+        valor = bd.get("valor", 0)
+        if not Pos.check(cr):
+            if mat:
+                emp = Employee._search_by_mat(mat, cr)
+                if emp:
+                    if emp.permissao == "ADMIN":
+                        pos = Pos(
+                            abertura = valor, matricula = mat,
+                            data = now(fuso(cr)), cr = cr, valor = valor
+                        )
+                        db.session.add(pos)
+                        db.session.commit()
+                        return jsonify("Caixa aberto com sucesso!"), 200
+                    return jsonify("Você não tem permissão!"), 401
+                return jsonify("Funcionario não encontrado"), 404
+            return jsonify("Matricula Obrigatória"), 400
+        return jsonify("Caixa já aberto"), 406
 
     @check_connection
     @require_cr
     def append(self, bd:MultiDict, hd:Headers, cr=None): # Adiciona valor ao caixa
         mat = bd.get("mat")
-        emp = Employee._search_by_mat(mat, cr)
-        if emp.permissao == "ADMIN":
-            valor = bd.get("valor", 0)
-            if valor > 0:
-                cash = Pos.query.filter_by(cr=cr).one()
-                cash.valor += valor
-                db.session.commit()
-                return jsonify("Valor atualizado com sucesso"), 200
-            return jsonify("Valor precisa ser maior que zero"), 400
-        return jsonify("Você não tem permissão!"), 401
+        perm = hd.get("perm")
+        if Pos.check(cr):
+            if perm == "ADMIN":
+                valor = bd.get("valor", 0)
+                if valor > 0:
+                    cash = Pos.query.filter_by(cr=cr).one()
+                    cash.valor += valor
+                    db.session.commit()
+                    return jsonify("Valor atualizado com sucesso"), 200
+                return jsonify("Valor precisa ser maior que zero"), 400
+            return jsonify("Você não tem permissão!"), 401
+        return jsonify("Caixa fechado!"), 401
 
     @check_connection
     @require_cr
@@ -74,43 +76,50 @@ class PosService:
         gc = hd.get("gc")
         
         if mat:
-            vendas = Sale.query.filter_by(cr=cr, data=now(fuso(cr)).today()).all()
-            
-            dd = {'PIX':0, 'DINHEIRO':0, 'DEBITO':0, 'CREDITO':0, 'TOTAL': 0, 'DESPESAS':0, 'ABERTURA':0, "FECHAMENTO":0}
+            emp = Employee._search_by_mat(mat, cr)
+            if emp:
+                vendas = Sale.query.filter_by(cr=cr, data=now(fuso(cr)).today()).all()
+                
+                dd = {'PIX':0, 'DINHEIRO':0, 'DEBITO':0, 'CREDITO':0, 'TOTAL': 0, 'DESPESAS':0, 'ABERTURA':0, "FECHAMENTO":0}
 
-            for venda in vendas:
-                dd[venda.pagamento] += venda.valor - venda.desconto
-                dd["TOTAL"] += venda.valor - venda.desconto
-            
-            saidas = Expense.query.filter_by(cr=cr, data=now(fuso(cr)).today()).all()
-            
-            for saida in saidas: dd["DESPESAS"] += saida.valor
+                for venda in vendas:
+                    dd[venda.pagamento] += venda.valor - venda.desconto
+                    dd["TOTAL"] += venda.valor - venda.desconto
+                
+                saidas = Expense.query.filter_by(cr=cr, data=now(fuso(cr)).today()).all()
+                
+                for saida in saidas: dd["DESPESAS"] += saida.valor
 
-            caixa_atual = Pos.query.filter_by(cr=cr).one()
-            dd["ABERTURA"] = caixa_atual.abertura
-            dd["FECHAMENTO"] = caixa_atual.valor
-            
-            print(dd)
+                caixa_atual = Pos.query.filter_by(cr=cr).one()
+                dd["ABERTURA"] = caixa_atual.abertura
+                dd["FECHAMENTO"] = caixa_atual.valor
+                
+                # Dados do fechamento
+                caixa_fc = PosClose()
+                caixa_fc.abertura = dd["ABERTURA"]
+                caixa_fc.cartao = dd["DEBITO"] + dd["CREDITO"]
+                caixa_fc.dinheiro = dd["DINHEIRO"]
+                caixa_fc.pix = dd["PIX"]
+                caixa_fc.total = dd["TOTAL"]
+                caixa_fc.saida = dd["DESPESAS"]
+                caixa_fc.cr = cr
+                caixa_fc.troco = dd["FECHAMENTO"]
+                caixa_fc.grupodecliente = gc
+                caixa_fc.matricula = mat
+                caixa_fc.data = now(fuso(cr))
 
-            # Dados do fechamento
-            caixa_fc = PosClose()
-            caixa_fc.abertura = dd["ABERTURA"]
-            caixa_fc.cartao = dd["DEBITO"] + dd["CREDITO"]
-            caixa_fc.dinheiro = dd["DINHEIRO"]
-            caixa_fc.pix = dd["PIX"]
-            caixa_fc.total = dd["TOTAL"]
-            caixa_fc.saida = dd["DESPESAS"]
-            caixa_fc.cr = cr
-            caixa_fc.grupodecliente = gc
-            caixa_fc.matricula = mat
-            caixa_fc.data = now(fuso(cr))
+                db.session.add(caixa_fc)
+                db.session.delete(caixa_atual)
+                db.session.commit()
+                return jsonify("Caixa fechado com sucesso"), 200 # Retorna sucesso
+            return jsonify("Funcionario não encontrado"), 404 # Retorna NOT FOUND - 404
+        return jsonify("Matrícula é obrigatória"), 400 # Retorna BAD REQUEST - 400
 
-            db.session.add(caixa_fc)
-            db.session.delete(caixa_atual)
-            db.session.commit()
-            return jsonify("Caixa fechado com sucesso"), 200
-        return jsonify("Matrícula é obrigatória"), 400
-            
+    # @check_connection
+    @require_cr
+    def last_close(self, cr=None) -> tuple:
+        return jsonify(PosClose.check(cr).troco), 200 
+
     # ===============================================================
     # ===============================================================
     # ====================== MODO CAIXA =============================

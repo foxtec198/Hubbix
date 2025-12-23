@@ -17,17 +17,16 @@ class SalesService:
         else: return jsonify([s.to_dict() for s in Sale.query.filter_by(cr=cr).all()])
 
     def create(self, bd:MultiDict, hd:Headers, cr=None): # Cria uma nova venda
-        valor = bd.get("valor")
-        desconto = bd.get("desconto")
-        pagamento = bd.get("pagamento")
+        valor = bd.get("valor") # Valor da Venda
+        desconto = bd.get("desconto") # Valor do desconto
+        pagamento = bd.get("pagamento") # Metodo de pagamento
         id_cliente = bd.get("id_cliente", 0) # Obtem o id do cliente, caso contrario define como 0(Não informado)
-        data = now(fuso(cr))
-        grupodecliente = hd.get("grupodecliente")
-        cr = cr
-        tipo = bd.get("tipo", "PRODUTOS")
-        matricula = bd.get("mat")
+        data = now(fuso(cr)) # Data atual com fuso por loja
+        grupodecliente = hd.get("gc") # Grupo de cliente 
+        tipo = bd.get("tipo", "PRODUTOS") # Tipo Produtos/OS
+        matricula = bd.get("mat") # Matricula
 
-        ok, error = check_field(
+        ok, error = check_field( # Confirma os valres obrigatorios.
             valor=valor,
             pagamento=pagamento,
             id_cliente=id_cliente,
@@ -35,9 +34,12 @@ class SalesService:
             matricula=matricula
         )
         
-        nova_venda = Sale(
+        nova_venda = Sale( # Cria a nvoa venda
+            valor=valor,
+            cr=cr,
+            pagamento=pagamento,
+            desconto=desconto,
         )
-
         db.session.add(nova_venda)
         db.session.commit()
         return jsonify(nova_venda.to_dict()), 201

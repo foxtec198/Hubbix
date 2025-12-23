@@ -32,6 +32,10 @@ class PosClose(BaseModel):
     grupodecliente = db.Column(db.String)
     cr = db.Column(db.String)
 
+    @classmethod
+    def check(pos, cr):
+        return PosClose.query.filter(pos.cr == cr).order_by(pos.data.desc()).first()
+
 class Items(BaseModel):
     __bind_key__ = "manager"
     __tablename__ = "md_items_caixa"

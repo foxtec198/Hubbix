@@ -215,11 +215,11 @@ class InvoiceService:
 
                     # Retorna a criação da Inoice (NNF)
                     return self.create_invoice_archive(
-                        store_name = store.nome_loja, cnpj = store.cpf_cnpj,
-                        address = Store.get_endereco(cr), tel = store.telefone,
-                        employye = employee, id_sale = id_venda,
-                        date = date.strftime('%d/%m/%Y %H:%M'),
-                        client = client, cart = cart, total = total,
+                        store_name = store.nome_loja, cnpj = store.cpf_cnpj, # Nome da Loja
+                        address = Store.get_endereco(cr), tel = store.telefone, # Endereço da mesma
+                        employye = employee, id_sale = id_venda, # matricula do funcionario e id da venda
+                        date = date.strftime('%d/%m/%Y %H:%M'), # Data da venda formata DD/MM/YYYY
+                        client = client, cart = cart, total = total, # Nome do cliente,  carrinho sendo composto por um DICt{"nome": prod1, "valor", 0, "quant": 0}
                         payment = payment, cr = cr ), 200 # Retorna Sucesso
                 return jsonify("Venda não encontrada"), 404 # Retorna NOT FOUND - 404
             return jsonify("Loja não encontrada!"), 404 # Retorna NOT FOUND - 404

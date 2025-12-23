@@ -24,6 +24,8 @@ class ExpenseService:
 
         id = bd.get("id") # ID da Despesa
         date = bd.get("data") # Data
+        cursor = bd.get("cursor") # Cursor para paginação
+
         # Caso seja passado o id retorna a Despesa exclusiva
         if id: return jsonify(Expense.get_expense(id, cr)), 200 # Retorna sucesso
         if date: # Retorna pela data informada no args (DD-MM-YYYY)
