@@ -7,6 +7,6 @@ sales_service = SalesService()
 @sales_bp.route("/", methods=["GET", "POST", "DELETE", "PATCH"])
 def main():
     match rq.method:
-        case "GET": return sales_service.get(rq.args, rq.headers)
+        case "GET": return sales_service.get(rq.args)
         case "POST": return sales_service.create(rq.get_json(), rq.headers)
     return jsonify("Metodo nao permitido"), 405

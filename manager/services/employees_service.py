@@ -1,6 +1,6 @@
 from werkzeug.datastructures import MultiDict, Headers
 from utils.safe_route import require_cr, check_connection
-from manager.models.employess import Employee, db
+from manager.models.employees import Employee, db
 from utils.check_field import check_field
 from hashlib import sha256
 from flask import jsonify

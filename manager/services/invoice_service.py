@@ -5,7 +5,7 @@ from general.models.store import Store
 from manager.models.releases import Release
 from manager.models.sales import Sale
 from manager.models.clients import Client
-from manager.models.employess import Employee
+from manager.models.employees import Employee
 from utils.to_real import to_real
 from os import getcwd, path
 from utils.db import db

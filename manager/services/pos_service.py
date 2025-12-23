@@ -5,7 +5,7 @@ from flask import jsonify
 from utils.now import now
 
 from manager.models.pos import Pos, PosClose, Items
-from manager.models.employess import Employee
+from manager.models.employees import Employee
 from manager.models.sales import Sale
 from manager.models.expenses import Expense
 from manager.models.timezone import fuso

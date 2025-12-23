@@ -11,10 +11,14 @@ from utils.now import now
 class SalesService:
     @check_connection
     @require_cr
-    def get(self, bd:MultiDict, hd:Headers, cr=None): # Obtem todas as vendas por ID ou CR
-        id = bd.get("id", None)
+    def get(self, bd:MultiDict, cr=None): # Obtem todas as vendas por ID ou CR
+        id = bd.get("id")
+        month = bd.get("month")
+        day = bd.get("day")
+        year= bd.get("year")
         if id: return jsonify(Sale.query.filter_by(cr=cr, id=id).one().to_dict())
-        else: return jsonify([s.to_dict() for s in Sale.query.filter_by(cr=cr).all()])
+        if day and month and year: return jsonify(Sale._search_by_date(day, month, year, cr))
+        else: return jsonify(Sale._search_by_cr(cr))
 
     def create(self, bd:MultiDict, hd:Headers, cr=None): # Cria uma nova venda
         valor = bd.get("valor") # Valor da Venda
@@ -33,13 +37,9 @@ class SalesService:
             tipo=tipo,
             matricula=matricula
         )
-        
-        nova_venda = Sale( # Cria a nvoa venda
-            valor=valor,
-            cr=cr,
-            pagamento=pagamento,
-            desconto=desconto,
-        )
-        db.session.add(nova_venda)
-        db.session.commit()
-        return jsonify(nova_venda.to_dict()), 201
+        if ok: # Confere se os dados estão ok
+            nova_venda = Sale(valor=valor, cr=cr, pagamento=pagamento, desconto=desconto) # Cria a nvoa venda
+            db.session.add(nova_venda) # Adiciona a nova venda na sessao
+            db.session.commit() # Salva a nova venda no bd 
+            return jsonify(nova_venda.to_dict()), 201 # Retorna create com a nova venda e seus dados!
+        return jsonify(error), 400 # Retorna um bad request com o campo faltante

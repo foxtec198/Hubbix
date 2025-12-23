@@ -12,7 +12,7 @@ from utils.safe_route import check_connection, require_cr
 # Models
 from manager.models.orders import Order # A propira OS
 from manager.models.pos import Pos # Caixa
-from manager.models.employess import Employee # Funcionarios
+from manager.models.employees import Employee # Funcionarios
 from manager.models.config import Config # Configurações
 from manager.models.clients import Client # Clientes
 from manager.views.vw_os import ViewOrders as vwOS # View

@@ -1,7 +1,7 @@
 from werkzeug.datastructures import MultiDict, Headers
 from utils.safe_route import require_cr, check_connection
 from utils.check_field import check_password_hash
-from manager.models.employess import Employee
+from manager.models.employees import Employee
 from manager.models.clients import Client
 from manager.models.config import Config
 from general.models.store import Store
