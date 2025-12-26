@@ -88,8 +88,21 @@ class ReportsService:
     def get_reports_payments_screen(self, bd:MultiDict, cr=None):
         filter = bd.get("filter") # Pega o filtro de resposta
         date = now(fuso(cr)) # Data atual de acordp com o timezone da loja
-        res = defaultdict(int) # Reponse esperada
-        res["payments"] = defaultdict(int)
+        res = { # Reponse esperada
+            "orders": 0,
+            "orders_count": 0,
+            "products": 0,
+            "product_count": 0,
+            "total": 0,
+            "total_count": 0,
+            "opening": 0,
+            "payments": {
+                "debito": 0,
+                "credito": 0,
+                "pix": 0,
+                "dinheiro": 0
+            }
+        }
         if filter:
             # ============== DATA
             match filter:

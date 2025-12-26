@@ -1,6 +1,7 @@
 from general.models.base_model import BaseModel, db
 from utils.now import dt, now
 from dateutil.relativedelta import relativedelta
+from manager.models.employees import Employee
 
 class Expense(BaseModel):
     __bind_key__ = "manager" # Banco de dados
@@ -20,18 +21,36 @@ class Expense(BaseModel):
     @classmethod
     def _search_default(expense, cr) -> list: # Obtem por um periodo de 3 meses - padrao
         now_dt = now() # Data atual
-        end_dt = now_dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0) # Pega os dados referentea 3 meses atras 
-        init_dt = end_dt - relativedelta(months=3)
+        init_dt = now_dt - relativedelta(months=3)
         
-        expenses = expense.query.filter( # Obtem todas as despesas de acordo com o filtro
+        # Obtem todas as despesas de acordo com o filtro
+        expenses = db.session.query(
+            expense.id,
+            expense.motivo,
+            expense.valor,
+            expense.data,
+            Employee.nome.label("funcionario")
+        ).join(
+            Employee, Employee.matricula == expense.matricula
+        ).filter( 
             expense.cr == cr,
             expense.data >= init_dt,
-            expense.data < end_dt
+            expense.data < now_dt
         ).order_by(
             expense.data.desc()
         ).all()
-
-        return [e.to_dict() for e in expenses]
+        
+        res = list()
+        for expense in expenses:
+            res.append({
+                "id": expense.id,
+                "motivo": expense.motivo,
+                "valor": expense.valor,
+                "data": expense.data,
+                "funcionario": expense.funcionario
+            })
+        return res
+            
     
     @classmethod
     def _search_all_by_date(expense, cr, dt=now()) -> list: # Obtem por um periodo especifico

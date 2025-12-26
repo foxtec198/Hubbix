@@ -29,8 +29,7 @@ class Sale(BaseModel):
         init_date =  date.replace(day=day, month=month, year=year, hour=0, minute=0, second=0, microsecond=000000) # Data Inicial
         end_date =  date.replace(day=day, month=month, year=year, hour=23, minute=59, second=59, microsecond=999999) # Data Fianl
         sales = sale.query( # Consulta as vendas do periodo
-            sale.all(), # TESTAR
-            Employee.nome.label("funcionario") # TESTAR
+            sale, Employee.nome.label("funcionario")
         ).filter(
             sale.cr == cr, # Filtro por CR
             sale.data >= init_date, # Data tem que ser maior ou igual a data inicial
@@ -45,3 +44,7 @@ class Sale(BaseModel):
     @classmethod
     def _search_by_cr(sale, cr): # Retorna as vendas por cr
         return [s.to_dict() for s in sale.query.filter(sale.cr==cr).all()]
+
+    @classmethod
+    def _search_by_id(sale, id): # Retorna as vendas por id
+        return sale.query.filter(sale.id==id)

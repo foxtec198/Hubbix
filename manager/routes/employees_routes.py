@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request as rq
+from flask import Blueprint, request as rq
 from manager.services.employees_service import EmployeeService
 
 employees_bp = Blueprint("Funcionarios", __name__)

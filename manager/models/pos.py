@@ -14,6 +14,13 @@ class Pos(BaseModel):
     def check(cls, cr) -> bool:
         res = Pos.query.filter_by(cr=cr).all()
         return True if res else False
+
+    @classmethod
+    def add_expense_to_Pos(pos, cr, expense_value:float):
+        pos_instance = pos.query.filter(pos.cr == cr).first()
+        pos_instance.valor -= expense_value
+        db.session.commit()
+        
     
 class PosClose(BaseModel):
     __bind_key__ = "manager"

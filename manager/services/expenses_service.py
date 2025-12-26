@@ -7,6 +7,7 @@ from flask import jsonify
 from utils.db import db
 from manager.models.timezone import fuso
 from dateutil.relativedelta import relativedelta
+from manager.models.pos import Pos
 
 class ExpenseService:
     @check_connection
@@ -24,8 +25,6 @@ class ExpenseService:
 
         id = bd.get("id") # ID da Despesa
         date = bd.get("data") # Data
-        cursor = bd.get("cursor") # Cursor para paginação
-
         # Caso seja passado o id retorna a Despesa exclusiva
         if id: return jsonify(Expense.get_expense(id, cr)), 200 # Retorna sucesso
         if date: # Retorna pela data informada no args (DD-MM-YYYY)
@@ -33,7 +32,6 @@ class ExpenseService:
             return jsonify(Expense._search_all_by_date(cr, formated_dt)), 200 # Retorna as despesas pela data declarada caso haja alguma
         return jsonify(Expense._search_default(cr)), 200 # Retorna o default - a partir de 3 meses atras
 
-    @check_connection
     @require_cr
     def create(self, bd:MultiDict, cr = None):
         """
@@ -45,7 +43,7 @@ class ExpenseService:
         :return: (JSON, CODE)
         :rtype: tuple[Response, Literal[201]] | tuple[Response, Literal[400]]
         """
-        value = bd.get("valor") # Valor da Despesa
+        value = float(bd.get("valor")) # Valor da Despesa
         reason = bd.get("motivo") # Motivo da Despesa
         mat = bd.get("mat") # Matricula do Func.
         
@@ -56,12 +54,12 @@ class ExpenseService:
         if ok:
             expense = Expense( # Cria a expense
                 valor = value, data = now(fuso(cr)),
-                motivo = reason.upper(),
-                matricula = mat, cr = cr
+                motivo = reason.upper(), matricula = mat, cr = cr
             )
+            Pos.add_expense_to_Pos(cr, value)
             db.session.add(expense) # Add a despesa na tabela
             db.session.commit() # Salva os registros
-            return jsonify({ "msg": "Despesa criada", "id": expense.id }), 201 # Retorna create, o id e a mensagem
+            return jsonify({ "msg": "Despesa criada", "expense": expense.to_dict() }), 201 # Retorna create, o id e a mensagem
         return jsonify(error), 400 # Caso não passe na veridicação retorna BAD REQUEST - 400
         
     @check_connection

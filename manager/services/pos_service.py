@@ -1,9 +1,7 @@
-from werkzeug.datastructures.headers import Headers
-from werkzeug.datastructures.structures import MultiDict
+from werkzeug.datastructures import MultiDict, Headers
 from utils.safe_route import require_cr, check_connection
 from flask import jsonify
 from utils.now import now
-
 from manager.models.pos import Pos, PosClose, Items
 from manager.models.employees import Employee
 from manager.models.sales import Sale
@@ -11,11 +9,12 @@ from manager.models.expenses import Expense
 from manager.models.timezone import fuso
 from utils.db import db, query
 from manager.models.products import Product
+from manager.models.employees import Employee
 
+@check_connection
 class PosService:
-    @check_connection
     @require_cr
-    def status(self, bd:MultiDict, hd:Headers, cr=None): # Confere se o caixa está aberto, e retorna os dados do caixa
+    def status(self, bd:MultiDict, cr=None): # Confere se o caixa está aberto, e retorna os dados do caixa
         cash = Pos.query.filter_by(cr=cr).first()
         if cash: return jsonify({
             "status": True,
@@ -29,10 +28,9 @@ class PosService:
             "msg": "Caixa fechado",
             "hint": "Abra o caixa pela URI /caixa com método POST",
         })
-
-    @check_connection 
+ 
     @require_cr
-    def open(self, bd:MultiDict, hd:Headers, cr=None): # Abre o caixa se ná não estiver aberto
+    def open(self, bd:MultiDict, cr=None): # Abre o caixa se ná não estiver aberto
         mat = bd.get("mat")
         valor = bd.get("valor", 0)
         if not Pos.check(cr):
@@ -52,24 +50,22 @@ class PosService:
             return jsonify("Matricula Obrigatória"), 400
         return jsonify("Caixa já aberto"), 406
 
-    @check_connection
     @require_cr
     def append(self, bd:MultiDict, hd:Headers, cr=None): # Adiciona valor ao caixa
         mat = bd.get("mat")
-        perm = hd.get("perm")
         if Pos.check(cr):
-            if perm == "ADMIN":
-                valor = bd.get("valor", 0)
-                if valor > 0:
+            emp = Employee._search_by_mat(mat, cr)
+            if emp:
+                if emp.permissao == "ADMIN":
+                    valor = float(bd.get("valor", 0))
                     cash = Pos.query.filter_by(cr=cr).one()
                     cash.valor += valor
                     db.session.commit()
                     return jsonify("Valor atualizado com sucesso"), 200
-                return jsonify("Valor precisa ser maior que zero"), 400
-            return jsonify("Você não tem permissão!"), 401
+                return jsonify("Você não tem permissão!"), 401
+            return jsonify("Matricula nao encontrada!"), 404
         return jsonify("Caixa fechado!"), 401
 
-    @check_connection
     @require_cr
     def close(self, bd:MultiDict, hd:Headers, cr=None): # Fecha o caixa
         mat = bd.get("mat")
@@ -115,9 +111,8 @@ class PosService:
             return jsonify("Funcionario não encontrado"), 404 # Retorna NOT FOUND - 404
         return jsonify("Matrícula é obrigatória"), 400 # Retorna BAD REQUEST - 400
 
-    # @check_connection
     @require_cr
-    def last_close(self, cr=None) -> tuple:
+    def last_close(self, cr=None) -> tuple: # Retorna o valor do troco do último fechamento
         return jsonify(PosClose.check(cr).troco), 200 
 
     # ===============================================================
@@ -126,13 +121,11 @@ class PosService:
     # ===============================================================
     # ===============================================================
 
-    @check_connection
     @require_cr
-    def get_products(self, bd:MultiDict, hd:Headers, cr=None):
+    def get_products(self, cr=None):
         pos_itens = Items.query.filter_by(cr=cr).all()
         return jsonify([item.to_dict() for item in pos_itens])
 
-    @check_connection
     @require_cr
     def set_products(self, ean, cr=None):
         if ean:
@@ -156,7 +149,6 @@ class PosService:
             return jsonify("Sucesso"), 200
         return jsonify("EAN Obrigatório"), 400
     
-    @check_connection
     @require_cr
     def clean_pos(self, cr=None):
         query("delete from md_items_caixa where cr = '%s'", cr)

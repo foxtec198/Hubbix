@@ -16,7 +16,10 @@ class SalesService:
         month = bd.get("month")
         day = bd.get("day")
         year= bd.get("year")
-        if id: return jsonify(Sale.query.filter_by(cr=cr, id=id).one().to_dict())
+        if id: 
+            sale = Sale._search_by_id(id).first()
+            if sale: return jsonify(sale.to_dict())
+            return jsonify("Funcionario nao encontrado"), 404
         if day and month and year: return jsonify(Sale._search_by_date(day, month, year, cr))
         else: return jsonify(Sale._search_by_cr(cr))
 
