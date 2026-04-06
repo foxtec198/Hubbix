@@ -8,4 +8,4 @@ invoice_service = InvoiceService()
 def main(): 
     match rq.method:
         case "GET": return invoice_service.create_example() # Cria um exemplo de nota
-        case "POST": return invoice_service.create_invoice(rq.get_json()) # Cria a nota não fiscal (NnF)
+        case "POST": return invoice_service.create_invoice() # Cria a nota não fiscal (NnF)

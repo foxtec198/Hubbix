@@ -7,4 +7,4 @@ categories_service = CategoriesService()
 @categories_bp.route("", methods=["GET", "POST", "PATCH", "DELETE"])
 def main():
     match rq.method:
-        case "GET": return categories_service.get(rq.args)
+        case "GET": return categories_service.get()

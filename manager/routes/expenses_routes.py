@@ -7,7 +7,7 @@ expense_service = ExpenseService()
 @expenses_bp.route("", methods=["GET","POST","PATCH","DELETE"])
 def main():
     match rq.method:
-        case "GET": return expense_service.get(rq.args) # Retorna os valores 
-        case "POST": return expense_service.create(rq.get_json()) # Cria uma despesa
-        case "PATCH": return expense_service.update(rq.get_json()) # Altera os dados da despesa
-        case "DELETE": return expense_service.delete(rq.args) # Remove a despesa
+        case "GET": return expense_service.get() # Retorna os valores 
+        case "POST": return expense_service.create() # Cria uma despesa
+        case "PATCH": return expense_service.update() # Altera os dados da despesa
+        case "DELETE": return expense_service.delete() # Remove a despesa

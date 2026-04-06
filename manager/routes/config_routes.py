@@ -9,11 +9,11 @@ config_service = ConfigService()
 def main():
     match rq.method:
         case "GET": return config_service.read() # Retorna a config da loja
-        case "PATCH": return config_service.update(rq.get_json()) # Retorna a config da loja
+        case "PATCH": return config_service.update() # Retorna a config da loja
 
 # Tenta logar no sistema
 @config_bp.route("/login", methods=["POST"])
-def login(): return config_service.login(rq.get_json()) 
+def login(): return config_service.login() 
 
 # Atualiza o ARQUIVO da Logo
 @config_bp.route("/update_logo", methods=["PATCH"])

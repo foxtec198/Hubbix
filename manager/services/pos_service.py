@@ -134,8 +134,9 @@ class PosService:
         return jsonify([item.to_dict() for item in pos_itens])
 
     @safe_route
-    def set_products(self, ean, token_data):
+    def set_products(self, token_data):
         cr = token_data.get("cr")
+        ean = rq.args.get("ean")
         if ean:
             prod = Product._search_by_ean(ean)
             items = Items.query.filter_by(ean=ean).first()

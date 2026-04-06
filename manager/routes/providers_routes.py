@@ -7,8 +7,7 @@ provider_service = ProviderService()
 @providers_bp.route("", methods=["GET", "POST", "PATCH", "DELETE"])
 def main():
     match rq.method:
-        case "GET": provider_service.get(rq.args) # obtem os fornecdores por loja ou por id
-        case "POST": provider_service.create(rq.get_json(), rq.headers) # Cria um fornecedor
-        case "PATCH": provider_service.update(rq.get_json()) # Atualiza os dados do fornecedor
-        case "DELETE": provider_service.delete(rq.args) # Remove um fornecedor
-    return jsonify("Metodo nao permitido"), 405
+        case "GET": provider_service.get() # obtem os fornecdores por loja ou por id
+        case "POST": provider_service.create() # Cria um fornecedor
+        case "PATCH": provider_service.update() # Atualiza os dados do fornecedor
+        case "DELETE": provider_service.delete() # Remove um fornecedor

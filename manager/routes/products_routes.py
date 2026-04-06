@@ -7,7 +7,7 @@ prod_service = ProductService()
 @product_bp.route("", methods=["GET", "POST", "PATCH", "DELETE"])
 def main():
     match rq.method:
-        case "GET": return prod_service.get(rq.args, rq.headers)
-        case "POST": return prod_service.create(rq.get_json(), rq.headers)
-        case "PATCH": return prod_service.update(rq.get_json(), rq.headers)
-        case "DELETE": return prod_service.delete(rq.args, rq.headers)
+        case "GET": return prod_service.get()
+        case "POST": return prod_service.create()
+        case "PATCH": return prod_service.update()
+        case "DELETE": return prod_service.delete()

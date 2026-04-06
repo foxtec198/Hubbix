@@ -7,6 +7,5 @@ release_service = ReleaseService()
 @release_bp.route("/", methods=["GET", "POST", "PATCH", "DELETE"])
 def main():
     match rq.method:
-        case "GET": return release_service.get_releases(rq.args, rq.headers)
-        case "DELETE": return release_service.delete_release(rq.get_json(), rq.headers)
-    return jsonify("Metodo não permitido"), 405
+        case "GET": return release_service.get_releases()
+        case "DELETE": return release_service.delete_release()
