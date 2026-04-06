@@ -17,7 +17,7 @@ def check_connection(func):
 def require_cr(func):
     @wraps(func)
     def wrapper(*args,**kwargs):
-        cr = rq.headers.get("cr", None)
+        cr = rq.headers.get("cr", None) 
 
         if not Store.check_cr(cr): return jsonify("Loja inexistente"), 401
 
