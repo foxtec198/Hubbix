@@ -1,10 +1,8 @@
-from utils.safe_route import check_connection
 from werkzeug.datastructures import MultiDict, Headers
 from analytics.models.clients import Client
 from flask import jsonify
 from utils.db import db
 
-@check_connection
 class ClientService:
     def get(self, bd:MultiDict, hd:Headers):
         id = hd.get("id")

@@ -2,12 +2,10 @@ from flask import Blueprint, request, jsonify
 from bks.services.schedule_service import ScheduleService
 from bks.models.schedule_model import Schedule, db
 from datetime import datetime
-from utils.safe_route import check_connection, safe_route
 
 schedule_bp = Blueprint("schedule_bp", __name__)
 
 @schedule_bp.route("/generate", methods=["GET"])
-@check_connection
 def get_schedule():
     month = int(request.args.get("month", 1))
     year = int(request.args.get("year", datetime.now().year))
@@ -16,7 +14,6 @@ def get_schedule():
     return jsonify(schedule)
 
 @schedule_bp.route("/regenerate", methods=["GET"])
-@check_connection
 def regenerate_schedule():
     month = int(request.args.get("month", 1))
     year = int(request.args.get("year", datetime.now().year))
