@@ -18,7 +18,7 @@ print("Configurando API...")
 app = Flask(__name__) # Cria a instacia do APP
 CORS(app) # CORS Policy 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="gevent") # Cria o SocketIO
-app.config["SECRET_KEY"] = getenv("KEY") # Seta SUPERSECRET key, lol.
+app.config["SECRET_KEY"] = getenv("SECRET") # Seta SUPERSECRET key, lol.
 app.config["SQLALCHEMY_BINDS"] = {  # Configura os bancos de dados (Necessário pois temos mais de um Bind!)
     "analytics": getenv("ANALYTICS"), # Analytics usado para parcerias
     "lojas": getenv("LOJAS"), # Lojas do Hubbix em Geral
