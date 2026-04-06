@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from utils.db import db
 from utils.blueprints import blueprints
 from dotenv import load_dotenv
@@ -9,7 +9,7 @@ from flask_cors import CORS
 load_dotenv() # Carrega as variaveis de ambiente
 app = Flask(__name__) # Cria a instacia do APP
 CORS(app) # CORS Policy 
-socketio = SocketIO(app, cors_allowed_origins="*") # Cria o SocketIO
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="gevent") # Cria o SocketIO
 app.config["SECRET_KEY"] = getenv("KEY") # Seta SUPERSECRET key, lol.
 
 app.config["SQLALCHEMY_BINDS"] = {  # Configura os bancos de dados (Necessário pois temos mais de um Bind!)
@@ -30,6 +30,9 @@ db.init_app(app)# Inicia o banco de dados no APP
 
 # Carrega os Blueprints a partir do arquivo utils/blueprints.py
 for bp in blueprints: app.register_blueprint(bp, url_prefix=blueprints[bp])
+
+@app.route("/")
+def main(): return jsonify("API's running")
 
 # Modo Dev
 if __name__ == "__main__": app.run(debug=True, host="0.0.0.0", port=int(getenv("PORT", 9560)))
