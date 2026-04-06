@@ -8,5 +8,4 @@ store_service = StoreService()
 def main():
     match rq.method:
         case "GET": return store_service.get_store_data() # Retorna os dados da loja
-        case "PATCH": return store_service.update_store(rq.get_json(), rq.headers)
-    return jsonify()
+        case "PATCH": return store_service.update_store() # Atualiza os dados da loja

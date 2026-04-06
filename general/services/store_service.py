@@ -1,15 +1,13 @@
-from werkzeug.datastructures import MultiDict, Headers
-from utils.safe_route import check_connection, safe_route
+from utils.safe_route import safe_route
 from general.models.store import Store
 from manager.models.config import Config
-# frmo gourmet.models.config import Config as GConfig
-from flask import jsonify
+from flask import jsonify, request as rq
 from utils.db import db
 
 class StoreService:
-    @check_connection
     @safe_route
-    def get_store_data(self, cr=None): # Retorna os dados da Loja
+    def get_store_data(self, token_data): # Retorna os dados da Loja
+        cr = token_data.get("cr")
         store = Store.query.filter_by(cr=cr).first()
         if store: 
             # config = Config.query.filter_by(cr=cr).first() | GConfig.query.filter_by(cr=cr).first()
@@ -22,29 +20,31 @@ class StoreService:
             return jsonify("Configuração nao encontrada"), 404
         return jsonify("Loja nao encontrada"), 404
 
-    @check_connection
     @safe_route
-    def create_store(self, bd:MultiDict, hd:Headers, cr=None):
-        ...
+    def create_store(self, token_data):
+        cr = token_data.get("cr")
+        return 
+    
+    @safe_route
+    def update_store(self, token_data):
+        cr = token_data.get("cr")
+        body = rq.get_json()
 
-    @check_connection
-    @safe_route
-    def update_store(self, bd:MultiDict, hd:Headers, cr=None):
-        nome = bd.get("nome")
-        bairro = bd.get("bairro")
-        cep = bd.get("cep")
-        cidade = bd.get("cidade")
-        estado = bd.get("estado")
-        rua = bd.get("rua")
-        negociante = bd.get("negociante")
-        pacote = bd.get("pacote")
-        sistema = bd.get("sistema")
-        situacao = bd.get("situacao")
-        telefone = bd.get("telefone")
-        email = bd.get("email")
-        external_pos_id = bd.get("external_pos_id")
-        user_id = bd.get("user_id")
-        idLoja = bd.get("idLoja")
+        nome = body.get("nome")
+        bairro = body.get("bairro")
+        cep = body.get("cep")
+        cidade = body.get("cidade")
+        estado = body.get("estado")
+        rua = body.get("rua")
+        negociante = body.get("negociante")
+        pacote = body.get("pacote")
+        sistema = body.get("sistema")
+        situacao = body.get("situacao")
+        telefone = body.get("telefone")
+        email = body.get("email")
+        external_pos_id = body.get("external_pos_id")
+        user_id = body.get("user_id")
+        idLoja = body.get("idLoja")
 
         store = Store.query.filter_by(cr=cr).first()
 
@@ -70,7 +70,7 @@ class StoreService:
             return jsonify("Dados alterados com sucesso"), 200
         return jsonify("Loja nao encontrada"), 404
 
-    @check_connection
     @safe_route
-    def delete_store(self, bd:MultiDict, hd:Headers, cr=None):
-        ...
+    def delete_store(self, token_data):
+        cr = token_data.get("cr")
+        return
