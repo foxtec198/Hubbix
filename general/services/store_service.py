@@ -1,5 +1,5 @@
 from werkzeug.datastructures import MultiDict, Headers
-from utils.safe_route import check_connection, require_cr
+from utils.safe_route import check_connection, safe_route
 from general.models.store import Store
 from manager.models.config import Config
 # frmo gourmet.models.config import Config as GConfig
@@ -8,7 +8,7 @@ from utils.db import db
 
 class StoreService:
     @check_connection
-    @require_cr
+    @safe_route
     def get_store_data(self, cr=None): # Retorna os dados da Loja
         store = Store.query.filter_by(cr=cr).first()
         if store: 
@@ -23,12 +23,12 @@ class StoreService:
         return jsonify("Loja nao encontrada"), 404
 
     @check_connection
-    @require_cr
+    @safe_route
     def create_store(self, bd:MultiDict, hd:Headers, cr=None):
         ...
 
     @check_connection
-    @require_cr
+    @safe_route
     def update_store(self, bd:MultiDict, hd:Headers, cr=None):
         nome = bd.get("nome")
         bairro = bd.get("bairro")
@@ -71,6 +71,6 @@ class StoreService:
         return jsonify("Loja nao encontrada"), 404
 
     @check_connection
-    @require_cr
+    @safe_route
     def delete_store(self, bd:MultiDict, hd:Headers, cr=None):
         ...

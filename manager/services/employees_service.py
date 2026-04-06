@@ -1,24 +1,23 @@
-from werkzeug.datastructures import MultiDict, Headers
-from utils.safe_route import require_cr, check_connection
-from manager.models.employees import Employee, db
+# Utils
+from utils.safe_route import safe_route
 from utils.check_field import check_field
+from flask import jsonify, request as rq
 from hashlib import sha256
-from flask import jsonify
+# Models
+from manager.models.employees import Employee, db
 
 class EmployeeService:
-    @check_connection
-    @require_cr
-    def get(self, bd:MultiDict, cr = None):
+    @safe_route
+    def get(self, token_data):
         """
-        Docstring for get
-        
-        :param bd: Body(Argumentos) pode ser passada a matricula (Não obrigatorio)
-        :type bd: MultiDict
-        :param cr: Credencial de Loja declarada no Header (Não declara na função)
+        ### Docstring for get employee.
         :return: (JSON, CODE)
         :rtype: tuple[Response, Literal[200]] | tuple[Response, Literal[404]]
         """
-        mat = bd.get("mat") # Matricula
+
+        mat = rq.args.get("mat") # Matricula
+        cr = token_data.get("cr")
+
         if mat: # Confirma se a matricula foi declarada
             emp = Employee._search_by_mat(mat, cr) # Busca o funcionario por Matricula
             if emp: # Caso encontre da continuidade
@@ -31,25 +30,23 @@ class EmployeeService:
             return jsonify("Funcionario nao encontrado"), 404 # Retorna NOT FOUND - 404
         return jsonify(Employee._search_by_cr(cr)), 200 # Retorna Sucesso por loja
         
-    @check_connection
-    @require_cr
-    def create(self, bd:MultiDict, hd:Headers, cr=None):
+    @safe_route
+    def create(self, token_data):
         """
-        Docstring for create
+        ### Docstring for create an employee.
         
-        :param bd: Body(JSON) dados que serão utilizados para a criação do funcionario
-        :type bd: MultiDict
-        :param hd: Headers do request
-        :type hd: Headers
-        :param cr: Credencial de Loja declarada no Header (Não declara na função)
         :return: (JSON, CODE)
         :rtype: tuple[Response, Literal[201]] | tuple[Response, Literal[400]]
         """
+
+        body = rq.get_json()
+
         # ========== Dados do funcionario
-        nome = bd.get("nome") # Nome
-        pwd = bd.get("pwd") # Senha
-        perm = bd.get("perm", "FUNC") # Permissao do Funcionario
-        gc = hd.get("gc") # Grupo de Cliente
+        nome = body.get("nome") # Nome
+        pwd = body.get("pwd") # Senha
+        perm = body.get("perm", "FUNC") # Permissao do Funcionario
+        cr = token_data.get("cr")
+        gc = token_data.get("gc")
         
         # Checa os dados obrigatorios
         ok, error = check_field(nome=nome, senha=pwd)
@@ -66,23 +63,22 @@ class EmployeeService:
             return jsonify({ "msg": "Cadastrado com sucesso", "matricula": employee.matricula }), 201 # Retorna sucesso com a matricula
         return jsonify(error), 400 # Retorna BAD REQUEST - 400
 
-    @check_connection
-    @require_cr
-    def update(self, bd:MultiDict, cr=None):
+    @safe_route
+    def update(self, token_data):
         """
-        Docstring for update
-        
-        :param bd: Body(JSON) deve ser declarado os dados a serem atualizados do cliente tendo a matricula como obrigatória
-        :type bd: MultiDict
-        :param cr: Credencial de Loja declarada no Header (Não declara na função)
+        ### Docstring for update employee.
+
         :return: (JSON, CODE)
         :rtype: tuple[Response, Literal[200]] | tuple[Response, Literal[404]] | tuple[Response, Literal[400]]
         """
+        body = rq.get_json()
+        cr = token_data.get("cr")
+        
         # ================== Dados do Funcionario
-        mat = bd.get("mat") # Matricula
-        nome = bd.get("nome") # Nome
-        perm = bd.get("perm") # Permissao
-        pwd = bd.get("pwd") # Senha
+        mat = body.get("mat") # Matricula
+        nome = body.get("nome") # Nome
+        perm = body.get("perm") # Permissao
+        pwd = body.get("pwd") # Senha
 
         if mat: # Confirma se foi declarado a matricula
             employee = Employee._search_by_mat(mat, cr) # Retorna o funcionario por matricula
@@ -97,17 +93,15 @@ class EmployeeService:
             return jsonify("Funcionario não encontrado"), 404 # Retorna NOT FOUND - 404
         return jsonify("Matricula Obrigatória"), 400 # Retorna BAD REQUEST - 400
 
-    @check_connection
-    def delete(self, bd:MultiDict):
+    @safe_route
+    def delete(self):
         """
-        Docstring for delete
-        
-        :param bd: Parametros onde deve ser passado a matricula de forma obirgatória
-        :type bd: MultiDict
+        ### Docstring for delete employee.
+
         :return: (JSON, CODE)
         :rtype: tuple[Response, Literal[200]] | tuple[Response, Literal[400]]
         """
-        mat = bd.get("mat") # Matricula
+        mat = rq.args.get("mat") # Matricula
         if mat: # Confere se foi declarado a matricula
             db.session.delete(Employee.get(mat)) # Remove por matricula
             db.session.commit() # Salva o registro no BD

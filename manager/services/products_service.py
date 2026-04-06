@@ -1,39 +1,44 @@
-from manager.models.products import Product, VwProducts
+# utils
 from manager.models.timezone import fuso
 from werkzeug.datastructures.headers import Headers
-from werkzeug.datastructures.structures import MultiDict
-from utils.safe_route import check_connection, require_cr
+from utils.safe_route import safe_route
 from utils.now import now
 from flask import jsonify, request as rq
 from utils.check_field import check_field
 from os import path, getcwd
-from utils.db import db
+# models
+from manager.models.products import Product, VwProducts, db
 
 class ProductService:
-    # @check_connection
-    @require_cr
-    def get(self, bd:MultiDict, hd:Headers, cr = None): # Obtem todos os produtos
-        id = bd.get("id")
-        ean = bd.get("ean")
-        nome = bd.get("nome")
+    @safe_route
+    def get(self, token_data): # Obtem todos os produtos
+        args = rq.get_args
+        cr = token_data.get("cr")
+        id = args.get("id")
+        ean = args.get("ean")
+        nome = args.get("nome")
+
         if id: return VwProducts._search_by_id(id)
         elif ean: return VwProducts._search_by_ean(ean)
         elif nome: return VwProducts._search_by_name(nome)
         else: return VwProducts._searh_by_cr(cr)
 
-    @check_connection
-    @require_cr
-    def create(self, bd:MultiDict, hd:Headers, cr = None): # Cria um produto
+    @safe_route
+    def create(self, token_data): # Cria um produto
+
+        body = rq.form
         files = rq.files # Seta as files da requisição
-        nome = bd.get("nome")
-        custo = bd.get("custo")
-        valor = bd.get("valor")
-        estoque_minimo = bd.get("estoque_minimo", 0)
-        quantidade = bd.get("quantidade")
-        desconto = bd.get("desconto")
-        lucro = bd.get("lucro")
-        fornecedor = bd.get("fornecedor")
-        gc = hd.get("gc")
+        cr = token_data.get("cr")
+        gc = token_data.get("gc")
+
+        nome = body.get("nome")
+        custo = body.get("custo")
+        valor = body.get("valor")
+        estoque_minimo = body.get("estoque_minimo", 0)
+        quantidade = body.get("quantidade")
+        desconto = body.get("desconto")
+        lucro = body.get("lucro")
+        fornecedor = body.get("fornecedor")
 
         ok, error = check_field(
             nome=nome, custo=custo, valor=valor,
@@ -67,7 +72,7 @@ class ProductService:
                 img.save(filepath)
             else: filename = 'blank.png'
 
-            ean = bd.get("ean", prod.id) # Define o EAN
+            ean = body.get("ean", prod.id) # Define o EAN
 
             # Seta o EANe a IMG
             prod.ean = ean
@@ -80,11 +85,13 @@ class ProductService:
             }), 200
         return jsonify(error), 400
 
-    @check_connection
-    @require_cr
-    def update(self, bd:MultiDict, hd:Headers, cr = None):
+    @safe_route
+    def update(self, token_data):
+        body = rq.form
+        cr = token_data.get("cr")
+
         files = rq.files # Seta as files da requisição
-        id = bd.get("id")
+        id = body.get("id")
         if id:
             ean = db.get("ean")
             nome = db.get("nome")
@@ -96,7 +103,7 @@ class ProductService:
             lucro = db.get("lucro")
             fornecedor = db.get("fornecedor")
             
-            prod = Product.query.filter_by(id=id).one()
+            prod = Product.query.filter_by(id=id, cr=cr).one()
             if prod:
                 if ean: prod.ean = ean
                 if nome: prod.nome = nome
@@ -119,10 +126,9 @@ class ProductService:
             return jsonify("Produto não encontrado!"), 401
         return jsonify("ID Obrigat´roio!"), 400
 
-    @check_connection
-    @require_cr
-    def delete(self, bd:MultiDict, hd:Headers, cr = None):
-        id = bd.get("id")
+    @safe_route
+    def delete(self):
+        id = rq.args.get("id")
         if id:
             db.session.delete(Product.query.get(id))
             db.session.commit()

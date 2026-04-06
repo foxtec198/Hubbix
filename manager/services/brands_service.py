@@ -1,13 +1,11 @@
 # Utils
-from werkzeug.datastructures import MultiDict
 from manager.models.brands import Brand, db
-from flask import jsonify
-from utils.safe_route import check_connection, require_cr
+from flask import jsonify, request as rq
+from utils.safe_route import safe_route
 
-class BrandService:
-    @check_connection
-    @require_cr
-    def get(self, bd:MultiDict, cr= None):
+class BrandsService:
+    @safe_route
+    def get(self, token_data) -> tuple:
         """
         Docstring for get
         
@@ -17,16 +15,16 @@ class BrandService:
         :return: (JSON, CODE)
         :rtype: tuple[Response, Literal[404]] | tuple[Response, Literal[200]]
         """
-        id = bd.get("id") # Busca o id da Marca
+        cr = token_data.get("cr") # Obtém o CR do token
+        id = rq.args.get("id") # Busca o id da Marca
         if id: # Confere se foi declardao o id
             brand = Brand.get_brand(cr, id) # Pega a marca por ID
             if brand: return jsonify(brand.to_dict()), 200 # Retorna os dados da marca por id
             return jsonify("Marca não encontrada"), 404 # Retorna NOT FOUND - 404
         return jsonify(Brand._search_by_cr(cr)), 200 # Retorna as marcas por loja, caso nao declarado o id
     
-    @check_connection
-    @require_cr
-    def create(self, bd:MultiDict, cr = None) -> tuple: 
+    @safe_route
+    def create(self, token_data) -> tuple: 
         """
         Docstring for create
         
@@ -36,17 +34,19 @@ class BrandService:
         :return: (JSON, CODE)
         :rtype: tuple[Response, Literal[400]] | tuple[Response, Literal[201]]
         """
-        name = bd.get("nome") # Nome da Marca
+        cr = token_data.get("cr") # Obtém o CR do Token
+        body = rq.get_json() # Obtem o JSON do Body
+        name = body.get("nome") # Nome da Marca
+
         if name: # Confirma se foi passado o nome
-            brand = Brand(nome = name,cr = cr) # Cria o registro no Banco de Dados
+            brand = Brand(nome= name, cr= cr) # Cria o registro no Banco de Dados
             db.session.add(brand) # Adiciona o registro
             db.session.commit() # Salva os dados
             return jsonify({ "msg": f"{brand.nome} criada com sucesso!", "id": brand.id }), 201 # Retorna CREATED, com o id da marca
         return jsonify("Nome obrigatório"), 400 # Retorna BAD REQUEST - Caso falte algum dado obrigatorio
     
-    @require_cr
-    @check_connection
-    def update(self, bd:MultiDict, cr = None) -> tuple: 
+    @safe_route
+    def update(self, token_data) -> tuple: 
         """
         Docstring for update
         
@@ -56,8 +56,11 @@ class BrandService:
         :return: (JSON, CODE)
         :rtype: tuple[Response, Literal[404]] | tuple[Response, Literal[200]] | tuple[Response, Literal[400]]
         """
-        id = bd.get("id") # Busca o id da marca a ser alterada
-        nome = bd.get("nome") # Nome a ser alterado
+        cr = token_data.get("cr") # Obtém o CR do Token
+        
+        body = rq.get_json() # Obtem o JSON do Body
+        id = body.get("id") # Busca o id da marca a ser alterada
+        nome = body.get("nome") # Nome a ser alterado
 
         if id: # Confere se o id foi declarado
             brand = Brand.get_brand(cr, id) # Busca a marca por ID e Loja
@@ -68,9 +71,8 @@ class BrandService:
             return jsonify("Marca não encontrada"), 404 # Retorna NOT FOUND - 404
         return jsonify("ID Obrigatorio"), 400 # Retorna BAD REQUEST - 400
     
-    @require_cr
-    @check_connection
-    def delete(self, bd:MultiDict, cr = None) -> tuple: 
+    @safe_route
+    def delete(self) -> tuple: 
         """
         Docstring for delete
         
@@ -80,7 +82,8 @@ class BrandService:
         :return: (JSON, CODE)
         :rtype: tuple[Response, Literal[200]] | tuple[Response, Literal[400]]
         """
-        id = bd.get("id") # Busca o ID da MArca
+
+        id = rq.args.get("id") # Busca o ID da MArca
         if id: # Confere se o id foi declarado
             db.session.delete(Brand.query.get(id)) # Deleta a marca
             db.session.commit() # Salva os dados no Banco

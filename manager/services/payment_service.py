@@ -1,20 +1,21 @@
-from flask import jsonify
-from werkzeug.datastructures import MultiDict, Headers
-from utils.safe_route import check_connection, require_cr
+# Utils
+from flask import jsonify, request as rq
+from utils.safe_route import safe_route
 from utils.check_field import check_field
+# Models
+from manager.models.sales import Sale, db
 from manager.models.mercado_pago import MP
-from manager.models.sales import Sale
-from utils.db import db
 
 class MPService:
     mp = MP()
 
-    @check_connection
-    @require_cr
-    def get_payment_status(self, bd:MultiDict, hd:Headers, cr=None): # Pega o status do pagamento
+    @safe_route
+    def get_payment_status(self, token_data): # Pega o status do pagamento
         # Dados Obrigatorio
-        id = bd.get('id')
-        key = bd.get('key')
+        body = rq.get_json()
+        
+        id = body.get('id')
+        key = body.get('key')
 
         # Checa os campos obrigatorios
         ok, error = check_field(id=id,key=key)

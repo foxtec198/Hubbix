@@ -1,18 +1,18 @@
-from utils.safe_route import check_connection, require_cr
-from werkzeug.datastructures import Headers, MultiDict
+from flask import jsonify, request as rq
 from PIL import Image, ImageDraw, ImageFont
+from manager.models.timezone import fuso
+from utils.safe_route import safe_route
+from utils.to_real import to_real
+from os import getcwd, path
+from utils.db import db
+from sqlalchemy import func
+from utils.now import now
+# Models
 from general.models.store import Store
 from manager.models.releases import Release
 from manager.models.sales import Sale
 from manager.models.clients import Client
 from manager.models.employees import Employee
-from utils.to_real import to_real
-from os import getcwd, path
-from utils.db import db
-from sqlalchemy import func
-from flask import jsonify
-from utils.now import now
-from manager.models.timezone import fuso
 
 # ============== Fontes
 coolvetica = path.join(getcwd(), "manager", "assets", "fonts", "coolvetica.otf")
@@ -146,30 +146,35 @@ class InvoiceService:
         self.img.save(caminhoImg) # Salva a imagem como PDF 
         return nome_arquivo # Retorna o nome do arquivo
     
-    @check_connection
-    @require_cr
-    def create_example(self, cr = None): # Gera um exemplo de nota não fiscal
-        arquivo = self.create_invoice_archive(
-            "NOME DA LOJA", "12345678910111", "Endereço de EXemplo", "(DDD)TELEFONE",
-            "NOME DO FUNCIONARIO", "1584", now(fuso(cr)), "NOME DO CLIENTE", 
-            {"nome": "PRODUTO TESTE", "quantidade": 2, "valor": 20}, 40, "PIX", cr, True
+    @safe_route
+    def create_example(self, token_data): # Gera um exemplo de nota não fiscal
+        cr = token_data.get("cr")
+        return jsonify( 
+            self.create_invoice_archive(
+                "NOME DA LOJA", 
+                "12345678910111", 
+                "Endereço de EXemplo", 
+                "(DDD)TELEFONE",
+                "NOME DO FUNCIONARIO", 
+                "1584", now(fuso(cr)), 
+                "NOME DO CLIENTE", 
+                {"nome": "PRODUTO TESTE", "quantidade": 2, "valor": 20}, 
+                40, "PIX", cr, True
+            )
         )
-        return jsonify(arquivo)
     
-    @check_connection
-    @require_cr
-    def create_invoice(self, bd:MultiDict, cr = None): # Cria a nota pelo ROUTE
+    @safe_route
+    def create_invoice(self, token_data): # Cria a nota pelo ROUTE
         """
         Docstring for Create Invoice
 
-        :param bd: Body(JSON) deve ser passado o Id da Venda para fazer a criação da invoice
-        :type bd: MultiDict
-        :param cr: Credencial da Loja declarada no Header (Não declarar na função!)
-        :type cr: String - str()
         :return: (JSON, CODE)
         :rtype: tuple[Response, Literal[200 | 400 | 404]] 
         """
-        id_venda = bd.get('id_venda') # ID da venda
+        
+        cr = token_data.get("cr")
+        body = rq.get_json()
+        id_venda = body.get('id_venda') # ID da venda
         if id_venda: # Confere se foi declarado
             store = Store._search_by_cr(cr) # Obtem a loja por CR
             if store: # Confere se encontrou a loja

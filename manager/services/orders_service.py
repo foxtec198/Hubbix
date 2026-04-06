@@ -1,13 +1,11 @@
 # Utils
-from werkzeug.datastructures.structures import MultiDict
-from werkzeug.datastructures.headers import Headers
 from utils.now import now, timedelta
 from utils.check_field import check_field
 from utils.db import cons, db
-from flask import jsonify
+from flask import jsonify, request as rq
 from os import path, getcwd, remove
 from PIL import Image, ImageDraw, ImageFont
-from utils.safe_route import check_connection, require_cr
+from utils.safe_route import safe_route
 
 # Models
 from manager.models.orders import Order # A propira OS
@@ -20,38 +18,42 @@ from manager.models.timezone import fuso # Get timezone Function
 from general.models.store import Store # Lojas
 
 class OrdersService:
-    @check_connection
-    @require_cr
-    def get(self, bd:MultiDict, hd:Headers, cr=None): # Pega as OS fultrando por status e CR
-        status = bd.get('status', False)
-        id = bd.get("id", False)
+    @safe_route
+    def get(self, token_data): # Pega as OS fultrando por status e CR
+        args = rq.args
+        cr = token_data.get("cr")
+        status = args.get('status', False)
+        id = args.get("id", False)
         if id: return jsonify(vwOS.query.filter_by(id=id).one().to_dict())
         if not status: return jsonify(vwOS.search_by_cr(cr))
         if status == 'EXPIRADA': return jsonify(vwOS.get_expireds(cr, (now(fuso(cr)) - timedelta(90)).strftime("%m-%Y")))
         elif status: return jsonify(vwOS.search_by_status(status, cr))
 
-    @check_connection
-    @require_cr
-    def create(self, bd:MultiDict, hd:Headers, cr=None): # Cria um ordem de serviço
-        gc = hd.get('gc')
+    @safe_route
+    def create(self, token_data): # Cria um ordem de serviço
+
+        body = rq.get_json()
+        cr = token_data.get('cr')
+        gc = token_data.get('gc')
+
         # Dados do Aparelho
-        modelo = bd.get('modelo')
-        cor = bd.get('cor', "")
-        marca = bd.get('marca', "")
+        modelo = body.get('modelo')
+        cor = body.get('cor', "")
+        marca = body.get('marca', "")
 
         # Sobre o serviço com o aparelho
-        status = bd.get('status', "")
-        relato = bd.get('relato', "").upper()
-        tipo = bd.get('tipo', "").upper()
-        obs = bd.get('obs', "").upper()
+        status = body.get('status', "")
+        relato = body.get('relato', "").upper()
+        tipo = body.get('tipo', "").upper()
+        obs = body.get('obs', "").upper()
 
         # Dados da OS
-        id_client = bd.get('cliente_id')
-        retirada = bd.get('retirada', "0000/00/00")
-        ligar = bd.get('ligar', True)
-        st_os = bd.get('st_os', "ABERTA")
-        valor = bd.get('valor')
-        matricula = bd.get('matricula')
+        id_client = body.get('cliente_id')
+        retirada = body.get('retirada', "0000/00/00")
+        ligar = body.get('ligar', True)
+        st_os = body.get('st_os', "ABERTA")
+        valor = body.get('valor')
+        matricula = body.get('matricula')
 
         # Dados que serão obrigatórios! 
         ok, error = check_field(
@@ -103,22 +105,25 @@ class OrdersService:
             return jsonify("Caixa fechado!"), 403 # Caixa Fechado
         return jsonify(error), 400 # Dados obrigatorios faltando
     
-    @check_connection
-    @require_cr
-    def update(self, bd:MultiDict, hd:Headers, cr=None): # Atualiza os dados das Ordens
+    @safe_route
+    def update(self, token_data): # Atualiza os dados das Ordens
+        
+        body = rq.get_json()
+        cr = token_data.get("cr")
+
         # Dados
-        id = bd.get('id', False) # ID da Ordem de Serviço
-        status_os = bd.get('status', "ABERTA").upper() # Status da OS, caso não declarada o padrão é ABERTA
-        valor = bd.get('valor') # Valor da OS
-        servico = bd.get('servico') # Serviço a ser prestado
-        tipo = bd.get("tipo") # Tipo do serviço
-        obs = bd.get("obs") # Obs da OS
+        id = body.get('id', False) # ID da Ordem de Serviço
+        status_os = body.get('status', "ABERTA").upper() # Status da OS, caso não declarada o padrão é ABERTA
+        valor = body.get('valor') # Valor da OS
+        servico = body.get('servico') # Serviço a ser prestado
+        tipo = body.get("tipo") # Tipo do serviço
+        obs = body.get("obs") # Obs da OS
 
         # Dados do Aparelho
-        modelo = bd.get('modelo') # Modelo do Aparelho - Obrigatório
-        cor = bd.get('cor') # Cor do Aparelho - Obrigatório
-        marca = bd.get('marca') # Marca do Aparelho - Obrigatório
-        imei = bd.get('imei') # IMEI do Aparelho
+        modelo = body.get('modelo') # Modelo do Aparelho - Obrigatório
+        cor = body.get('cor') # Cor do Aparelho - Obrigatório
+        marca = body.get('marca') # Marca do Aparelho - Obrigatório
+        imei = body.get('imei') # IMEI do Aparelho
 
         if Pos.check(cr): # Retorna se o caixa está aberto
             if status_os in ["ABERTA", "CANCELADA", "ENTREGUE", "ORÇAMENTO", "SEM CONSERTO"]:
@@ -158,13 +163,12 @@ class OrdersService:
             return jsonify("Status incorreto"), 404
         return jsonify("Caixa fechado"), 402
     
-    @check_connection
-    @require_cr
-    def delete(self, bd:MultiDict, hd:Headers, cr=None): # Ao inves de Deletar seta como Cancelado
-        id = bd.get("id", False)
+    @safe_route
+    def delete(self, token_data): # Ao inves de Deletar seta como Cancelado
+        id = rq.args.get("id", False)
+        cr = token_data.get("cr")
         if id: # Confere o ID da OS
             os = Order.query.filter_by(id=id, cr=cr).one() # Obtem a OS pelo Id
-            print(os)
             if os: # Confirma se a ordem existe
                 os.situacao = "CANCELADA" # Seta como cancelada
                 db.session.commit() # Salva as alterações

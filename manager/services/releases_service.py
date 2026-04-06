@@ -1,39 +1,37 @@
-from werkzeug.datastructures.headers import Headers
-from werkzeug.datastructures.structures import MultiDict
-from utils.safe_route import check_connection, require_cr
+# Utils
+from utils.safe_route import safe_route
 from utils.now import now
 from utils.db import db
-from flask import jsonify
-
+from flask import jsonify, request as rq
+from manager.models.timezone import fuso
+# Models
 from manager.models.releases import Release
 from manager.models.sales import Sale
-from manager.models.timezone import fuso
 from manager.models.orders import Order
 from manager.models.pos import Pos
 
 class ReleaseService:
-    @check_connection
-    @require_cr
-    def get_releases(self, bd: MultiDict, hd: Headers, cr=None): # Logica para obter as saidas
+    @safe_route
+    def get_releases(self, token_data): # Logica para obter as saidas
         # Retorna uma lista de saidas ou uma saida especifica se o id for declarado
-        id = bd.get("id")
+        id = rq.args.get("id")
+        cr = token_data.get("cr")
         if id: return Release.query.filter_by(id=id, cr=cr).one().to_dict()
         else: return [release.to_dict() for release in Release.query.filter_by(cr=cr).all()]
 
-    @check_connection
-    @require_cr
-    def create_release(self, bd: MultiDict, hd: Headers, cr=None): # Logica para criar um saida
+    @safe_route
+    def create_release(self, token_data): # Logica para criar um saida
         ...
 
-
-    @check_connection
-    @require_cr
-    def update_release(self, bd: MultiDict, hd: Headers, cr=None): # Logica para atualizar uma saida
+    @safe_route
+    def update_release(self, token_data): # Logica para atualizar uma saida
         ...
 
-    @check_connection
-    @require_cr
-    def delete_release(self, bd: MultiDict, hd: Headers, cr=None): # Logica para excluir uma saida
+    @safe_route
+    def delete_release(self, token_data): # Logica para excluir uma saida
+        bd = rq.args
+        cr = token_data.get("cr")
+
         # Credenciais
         id_venda = bd.get('id_venda')
         id = bd.get('id')

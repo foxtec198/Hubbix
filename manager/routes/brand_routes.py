@@ -1,8 +1,8 @@
 from flask import Blueprint, request as rq
-from manager.services.brands_service import BrandService
+from manager.services.brands_service import BrandsService
 
 brand_bp = Blueprint("Marcas", __name__)
-brand_service = BrandService()
+brand_service = BrandsService()
 
 @brand_bp.route("", methods=["GET", "POST", "PATCH", "DELETE"])
 def main():

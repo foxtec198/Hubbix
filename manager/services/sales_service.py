@@ -1,21 +1,22 @@
-from werkzeug.datastructures.structures import MultiDict
-from werkzeug.datastructures.headers import Headers                    
-from utils.safe_route import require_cr, check_connection
-from manager.models.sales import Sale
+# Utils
+from utils.safe_route import safe_route
 from manager.models.timezone import fuso
-from flask import jsonify
+from flask import jsonify, request as rq
 from utils.check_field import check_field
 from utils.db import db
 from utils.now import now
+# Models
+from manager.models.sales import Sale
 
 class SalesService:
-    @check_connection
-    @require_cr
-    def get(self, bd:MultiDict, cr=None): # Obtem todas as vendas por ID ou CR
-        id = bd.get("id")
-        month = bd.get("month")
-        day = bd.get("day")
-        year= bd.get("year")
+    @safe_route
+    def get(self, token_data): # Obtem todas as vendas por ID ou CR
+        args = rq.args
+        cr = token_data.get("cr")
+        id = args.get("id")
+        month = args.get("month")
+        day = args.get("day")
+        year= args.get("year")
         if id: 
             sale = Sale._search_by_id(id).first()
             if sale: return jsonify(sale.to_dict())
@@ -23,15 +24,19 @@ class SalesService:
         if day and month and year: return jsonify(Sale._search_by_date(day, month, year, cr))
         else: return jsonify(Sale._search_by_cr(cr))
 
-    def create(self, bd:MultiDict, hd:Headers, cr=None): # Cria uma nova venda
+    @safe_route
+    def create(self, token_data): # Cria uma nova venda
+        bd = rq.get_json()
+        cr = token_data.get("cr")
+        gc = token_data.get("gc")
+
         valor = bd.get("valor") # Valor da Venda
         desconto = bd.get("desconto") # Valor do desconto
         pagamento = bd.get("pagamento") # Metodo de pagamento
         id_cliente = bd.get("id_cliente", 0) # Obtem o id do cliente, caso contrario define como 0(Não informado)
-        data = now(fuso(cr)) # Data atual com fuso por loja
-        grupodecliente = hd.get("gc") # Grupo de cliente 
         tipo = bd.get("tipo", "PRODUTOS") # Tipo Produtos/OS
         matricula = bd.get("mat") # Matricula
+        data = now(fuso(cr)) # Data atual
 
         ok, error = check_field( # Confirma os valres obrigatorios.
             valor=valor,
@@ -40,8 +45,12 @@ class SalesService:
             tipo=tipo,
             matricula=matricula
         )
+        
         if ok: # Confere se os dados estão ok
-            nova_venda = Sale(valor=valor, cr=cr, pagamento=pagamento, desconto=desconto) # Cria a nvoa venda
+            nova_venda = Sale(
+                valor=valor, cr=cr, pagamento=pagamento, 
+                desconto=desconto, data=data, grupodecliente=gc
+            ) # Cria a nvoa venda
             db.session.add(nova_venda) # Adiciona a nova venda na sessao
             db.session.commit() # Salva a nova venda no bd 
             return jsonify(nova_venda.to_dict()), 201 # Retorna create com a nova venda e seus dados!

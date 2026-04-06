@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from bks.services.schedule_service import ScheduleService
 from bks.models.schedule_model import Schedule, db
 from datetime import datetime
-from utils.safe_route import check_connection, require_cr
+from utils.safe_route import check_connection, safe_route
 
 schedule_bp = Blueprint("schedule_bp", __name__)
 

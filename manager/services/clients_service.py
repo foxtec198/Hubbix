@@ -1,16 +1,16 @@
-from werkzeug.datastructures import MultiDict, Headers
-from utils.safe_route import check_connection, require_cr
-from manager.models.clients import Client, db
-from manager.models.timezone import fuso
+# Utils
 from random import randint
-from flask import jsonify
-from utils.now import now
+from flask import jsonify, request as rq
+from utils.safe_route import safe_route
 from utils.check_field import check_field
+from utils.now import now
+from manager.models.timezone import fuso
+# Models
+from manager.models.clients import Client, db
 
 class ClientService:
-    @check_connection
-    @require_cr
-    def get(self, bd:MultiDict, cr = None):
+    @safe_route
+    def get(self, token_data) -> tuple:
         """
         Docstring for get
         
@@ -21,41 +21,38 @@ class ClientService:
         :rtype: tuple[Response, Literal[404]] | tuple[Response, Literal[200]]
         """
 
-        id = bd.get("client_id") # Confirma se tem ID do Cliente
+        cr = token_data.get("cr")
+        id = rq.args.get("client_id") # Confirma se tem ID do Cliente
         if id: # Confirma se o ID foi declardo
             client = Client.get_client(cr, id) # Busca o cliente por ID e Loja
             if client: return jsonify(client.to_dict()), 200# Se o ID for declarado filtra pelo mesmo
             return jsonify("Cliente não localizado"), 404 # Retorna NOT FOUND - 404
         return jsonify(Client._search_by_cr(cr)), 200 # Retorna os clientes por CR 
         
-    @check_connection
-    @require_cr
-    def create(self, bd:MultiDict, hd:Headers, cr = None):
+    @safe_route
+    def create(self, token_data):
         """
-        Docstring for create
-        
-        :param bd: Body(JSON) deve ser passado os dados do Cliente a ser cadastrado
-        :type bd: MultiDict
-        :param hd: Headers onde deve ser declarado o CR e o GC como obrigatórios
-        :type hd: Headers
-        :param cr: Credecial de Loja passado no Header por obrigatório (Não declarar na função)
-        :return: (JSON, CODE)
+        ### Docstring for create client.
+
         :rtype: tuple[Response, Literal[201]] | tuple[Response, Literal[400]]
         """
 
+        body = rq.get_json()
+        cr = token_data.get("cr")
+        gc = token_data.get("gc")
+
         # ============= Dados do Cliente
-        cpf = bd.get("cpf", 0) # Caso não seja declarado o CPF seta o valor como 0(Zero)
-        name = bd.get("nome") # Nome do Cliente
-        tel = bd.get("tel") # Telefone do Cliente
-        address = bd.get("end") # Endereço do Cliente
-        obs = bd.get("obs") # Observação do cliente - IMPORTANTE: Coloque apenas se for algo NEGATIVO!
-        gc = hd.get("gc") # Grupo de Cliente
+        cpf = body.get("cpf", 0) # Caso não seja declarado o CPF seta o valor como 0(Zero)
+        name = body.get("nome") # Nome do Cliente
+        tel = body.get("tel") # Telefone do Cliente
+        address = body.get("end") # Endereço do Cliente
+        obs = body.get("obs") # Observação do cliente - IMPORTANTE: Coloque apenas se for algo NEGATIVO!
         
         # ============= Dados do aparelho
-        model = bd.get("modelo") # Modelo Ex:  G82, Note 10, A13
-        brand = bd.get("marca") # Marca Ex: Samsumg, Xiaomi, Motorola
-        color = bd.get("cor") # Cor Ex: Branco, Preto, Rosa
-        imei = bd.get("imei") # IMEI de Identificação do Aparelho importante porém opcional
+        model = body.get("modelo") # Modelo Ex:  G82, Note 10, A13
+        brand = body.get("marca") # Marca Ex: Samsumg, Xiaomi, Motorola
+        color = body.get("cor") # Cor Ex: Branco, Preto, Rosa
+        imei = body.get("imei") # IMEI de Identificação do Aparelho importante porém opcional
 
         # Checka se foram declarados os dados obrigatórios
         ok,error = check_field(
@@ -88,9 +85,8 @@ class ClientService:
             return jsonify({ "mensagem": "Cliente cadastrado", "client_id": client.id }), 201 # Retorna Sucesso com o ID do cliente
         return jsonify(f"Falta alguns dados - {error}"), 400 # Retorna BAD REQUEST - 400
 
-    @check_connection
-    @require_cr
-    def update(self, bd:MultiDict, cr = None):
+    @safe_route
+    def update(self, token_data):
         """
         Docstring for update
         
@@ -102,19 +98,23 @@ class ClientService:
 
         OBS: Para mais duvidas consulte a doc da API
         """
+
+        body = rq.get_json() # Body passado em JSON
+        cr = token_data.get("cr")
+
         # ============= Dados do Cliente
-        id = bd.get("id") # ID de Cliente é obrigatorio!!!!
-        cpf = bd.get("cpf") # CPF
-        nome = bd.get("nome") # Nome
-        tel = bd.get("tel") # Telefone
-        address = bd.get("end") # Endereço
-        obs = bd.get("obs") # OBS - IMPORTANTE: Só adicione uma OBS caso ela seja NEGATIVA!
+        id = body.get("id") # ID de Cliente é obrigatorio!!!!
+        cpf = body.get("cpf") # CPF
+        nome = body.get("nome") # Nome
+        tel = body.get("tel") # Telefone
+        address = body.get("end") # Endereço
+        obs = body.get("obs") # OBS - IMPORTANTE: Só adicione uma OBS caso ela seja NEGATIVA!
 
         # ============= Dados do aparelho
-        modelo = bd.get("modelo")
-        marca = bd.get("marca")
-        cor = bd.get("cor")
-        imei = bd.get("imei")
+        modelo = body.get("modelo")
+        marca = body.get("marca")
+        cor = body.get("cor")
+        imei = body.get("imei")
 
         if id:
             client = Client.get_client(cr, id) # Obtem o cliente por Loja e por id
@@ -134,18 +134,14 @@ class ClientService:
             return jsonify("Cliente não encontrado"), 404 # Retorna NOT FOUND - 404
         return jsonify("Id obrigatorio"), 400 # Retorna BAD REQUEST - 400
 
-    @check_connection
-    def delete(self, bd:MultiDict):
+    @safe_route
+    def delete(self):
         """
-        Docstring for delete
-        
-        :param bd: Body(Argumentos) onde deverá ser passado o ID do cliente (Obrigatorio)
-        :type bd: MultiDict
-        :return: (JSON, CODE)
+        ### Docstring for delete client.
         :rtype: tuple[Response, Literal[200]] | tuple[Response, Literal[400]]
         """
 
-        client_id = bd.get("client_id") # Busca o id do cliente
+        client_id = rq.args.get("client_id") # Busca o id do cliente
         if client_id: # Confirma se foi declarado o ID
             db.session.delete(Client.query.get(client_id)) # Remove o cliente por id
             db.session.commit() # Salva os dados no banco

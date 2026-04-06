@@ -1,19 +1,18 @@
-from werkzeug.datastructures import MultiDict, Headers
-from utils.safe_route import require_cr, check_connection
+# Utils
+from utils.safe_route import safe_route
 from utils.check_field import check_password_hash
-from manager.models.employees import Employee
-from manager.models.clients import Client
-from manager.models.config import Config
-from general.models.store import Store
+from utils.check_field import check_field
+from utils.token import create_token
 from flask import jsonify, request as rq
 from os import path, getcwd
-from utils.db import db
-from utils.check_field import check_field
+# Models
+from manager.models.employees import Employee, db
+from manager.models.clients import Client
+from manager.models.config import Config
 
 class ConfigService:
-    @check_connection
-    @require_cr
-    def read(self, cr = None) -> tuple:
+    @safe_route
+    def read(self, token_data) -> tuple:
         """
         Docstring for read
         
@@ -21,13 +20,13 @@ class ConfigService:
         :return: (JSON, CODE)
         :rtype: tuple[Response, Literal[200]] | tuple[Response, Literal[404]]
         """
+        cr = token_data.get("cr") # Obtém o CR do Token
         config = Config.get(cr) # Busca a config por CR
         if config: return jsonify(config.to_dict()), 200 # Retorna Sucesso e a lista de configuração
         return jsonify("Configuração não encontrada"), 404 # Retorna NOT FOUND - 404
     
-    @check_connection
-    @require_cr
-    def update(self, bd:MultiDict, cr=None) -> tuple:
+    @safe_route
+    def update(self, token_data) -> tuple:
         """
         Docstring for update
         
@@ -37,8 +36,10 @@ class ConfigService:
         :return: (JSON, CODE)
         :rtype: tuple[Response, Literal[200]] | tuple[Response, Literal[400]]
         """
-        filter = bd.get("filter") # Filtro da config a ser atualizada!
-        value = bd.get("value") # Valor a ser atualizado
+        cr = token_data.get("cr") # Obtém o cr do token
+        body = rq.get_json() # Obtem o JSON do Body
+        filter = body.get("filter") # Filtro da config a ser atualizada!
+        value = body.get("value") # Valor a ser atualizado
 
         if filter and value: # Confirma a presença de ambos
             config = Config.get(cr) # Busca a config atual
@@ -53,19 +54,18 @@ class ConfigService:
                 case "nnf": config.nnf = value
                 case _: return jsonify("Filtro inválido"), 400 # Retorna BAD REQUEST - 400
             db.session.commit() # Salva os dados no Banco
-            return jsonify("Configuração atualizada"), 200 # Retorna Sucesso
+            return jsonify("Configuração atualizada"), 200 # Retorna Sucesso - 200
         return jsonify("Filtro e valor são obrigatórios"), 400 # Retorna BAD REQUEST - 400
 
-    @require_cr
-    @check_connection
-    def update_logo(self, cr=None) -> tuple:
+    @safe_route
+    def update_logo(self, token_data) -> tuple:
         """
-        Docstring for update_logo
-        
-        :param cr: Credencial de Loja declarado no Header (Não declarara na função!)
-        :return: (JSON, CODE)
+        ### Docstring for update_logo.
+        Use for update the store logo.
+
         :rtype: tuple[Response, Literal[201]] | tuple[Response, Literal[404]]
         """
+        cr = token_data.get("cr")
         files = rq.files # Obtem os arquivos do Request
         if files: # Confirma se foi declarado o FILES
             logo_file = files.get("img") # Busca pelo arquivo chamado IMG
@@ -82,19 +82,18 @@ class ConfigService:
             return jsonify("Arquivo de logo não encontrado - Nome: img"), 404 # Retorna NOT FOUND - 404
         return jsonify("Upload não encontrado"), 404 # Retorna NOT FOUND - 404
 
-    @check_connection
-    def login(self, bd:MultiDict) -> tuple:
+    def login(self) -> tuple:
         """
-        Docstring for login
+        ### Docstring for login.
+        Function used to Login in the system and obtain the access token.
         
-        :param bd: Body(JSON) onde deve ser enviado a Matricula e Senha
-        :param type: MultiDict
         :return: (JSON, CODE)
         :rtype: tuple[Response, Literal[200]] | tuple[Response, Literal[404]] | tuple[Response, Literal[401]] tuple[Response, Literal[400]]
-        
         """
-        mat = bd.get("mat") # Matricula
-        pwd = bd.get("pwd") # Senha
+
+        body = rq.get_json() # Obtem o JSON do Body
+        mat = body.get("mat") # Matricula
+        pwd = body.get("pwd") # Senha
 
         # Checka os dados obrigatórios
         ok, error = check_field(matricula=mat, senha=pwd)
@@ -103,51 +102,41 @@ class ConfigService:
             employee = Employee.query.filter_by(matricula=mat).first() # Busca o funcionario por matricula
             if employee: # Caso encontre 
                 if check_password_hash(pwd, employee.hash): # Checka o hash do password com o do BD
-                    config = Config.get(employee.cr) # Busca as configurações da loja
-                    return jsonify({
-                        "display_name": employee.nome, # Nome do Funcionario
-                        "perm": employee.permissao, # Permisssão
-                        "cr": employee.cr, # CR
-                        "gc": employee.grupodecliente, # Grupo de Cliente (gc)
-                        "peca": config.peca, # Config Rapida - Controle de Peças
-                        "estoque": config.controle_estoque # Config Rapida - Controle de Estoque
-                    }), 200 # Retorna sucesso com os dados
+                    token = create_token({ "cr": employee.cr, "gc": employee.grupodecliente }) # Cria o token com os dados
+                    return jsonify({"access_token": token, "display_name": employee.nome}), 200 # Retorna sucesso com os dados
                 return jsonify("Senha incorreta"), 401 # Retorna UNAUTHORIZED - 401
             return jsonify("Matricula não encontrada"), 404 # Retorna NOT FOUND - 404
         return jsonify(error), 400 # Retorna BAD REQUEST - 400
 
-    @check_connection
-    @require_cr
-    def check_mat(self, mat:int, cr = None) -> tuple:
+    @safe_route
+    def check_mat(self, mat:int, token_data) -> tuple:
         """
         Docstring for check_mat \n
         Está função serve para realizar a checagem de matricula depois de logado, normalmente utilizada para funções administrativas e para checagem de permissão
 
         :param mat: Matricula que deve ser declarada como parametro na URL
         :param type: Integer - int()
-        :param cr: Credencial de Loja declarado no Header (Não declarara na função!)
-        :return: (JSON, CODE)
         :rtype: tuple[Response, Literal[200]] | tuple[Response, Literal[404]] | tuple[Response, Literal[400]]
         """
+
+        cr = token_data.get("cr") # Obtém o CR do token
         if mat: # Confere se foi declarado a matricula
             employee = Employee._search_by_mat(mat, cr) # Busca o funcionario por MAT
             if employee: return jsonify({ "display_name": employee.nome, "perm": employee.permissao }), 200 # Retorna sucesso com nome e perm
             return jsonify("Matricula nao encontrada"), 404 # Retorna NOT FOUND - 404
         return jsonify("Matricula é obrigatória"), 400 # Retorna BAD REQUEST - 400
 
-    @check_connection
-    @require_cr
-    def check_cpf(self, cpf:str, cr = None) -> tuple:
+    @safe_route
+    def check_cpf(self, cpf:str, token_data) -> tuple:
         """
         Docstring for check_cpf - Usado para confirmar se o cliente tem alguma OBS em seu cpf
 
         :param cpf: Deve ser passado como parametro na URL
         :param type: String - str()
-        :param cr: Credencial de Loja declarado no Header (Não declarara na função!)
-        ;return: (JSON, CODE)
         :rtype: tuple[Response, Literal[200]] | tuple[Response, Literal[404]] | tuple[Response, Literal[400]]
         """
         if cpf: # Confirma se foi declarado o CPF
+            cr = token_data.get("cr") # Obtém o CR do token
             client = Client._search_by_cpf(cr, cpf) # Busca o cliente por CPF            
             if client: return jsonify({ "nome": client.nome, "obs": client.obs }), 200 # Retorna Sucesso
             return jsonify("CPF nao encontrado"), 404 # Retorna NOT FOUND - 404

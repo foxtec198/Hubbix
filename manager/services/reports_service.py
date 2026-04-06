@@ -1,21 +1,23 @@
-from werkzeug.datastructures import MultiDict
-from utils.safe_route import require_cr, check_connection
-from utils.now import now
-from flask import jsonify
-from statistics import mean
-from collections import defaultdict
+# Utils
 from dateutil.relativedelta import relativedelta
-from utils.db import db
 from manager.models.timezone import fuso
+from flask import jsonify, request as rq
+from utils.safe_route import safe_route
+from collections import defaultdict
+from statistics import mean
 from sqlalchemy import func
+from utils.now import now
+from utils.db import db
+# Models
 from manager.models.sales import Sale
 from manager.models.pos import Pos
 
 class ReportsService:
-    @check_connection
-    @require_cr
-    def get_reports_welcome_screen(self, bd:MultiDict, cr=None):
-        mat = int(bd.get("mat")) # Matricula
+    @safe_route
+    def get_reports_welcome_screen(self, token_data):
+        args = rq.args
+        cr = token_data.get("cr")
+        mat = int(args.get("mat")) # Matricula
         if mat:
             # =================== Vars
             data = now() # Data atual
@@ -83,10 +85,12 @@ class ReportsService:
             }), 200
         return jsonify("Matricula Obrigatória"), 400
 
-    # @check_connection
-    @require_cr
-    def get_reports_payments_screen(self, bd:MultiDict, cr=None):
-        filter = bd.get("filter") # Pega o filtro de resposta
+    @safe_route
+    def get_reports_payments_screen(self, token_data):
+        args = rq.args
+        cr = token_data.get("cr")
+
+        filter = args.get("filter") # Pega o filtro de resposta
         date = now(fuso(cr)) # Data atual de acordp com o timezone da loja
         res = { # Reponse esperada
             "orders": 0,
