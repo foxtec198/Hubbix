@@ -114,7 +114,8 @@ class ReportsService:
                     init_date = date.replace(hour=0, minute=0, second=0) # Define a hora de inicio
                     end_date = date.replace(hour=23, minute=59, second=59) # Define a hora final do filtro
                 case "week":
-                    init_date = date.replace(day=date.day - 7 ,hour=0, minute=0, second=0) # Define a hora de inicio
+                    init_date = date - relativedelta(days=7) # Define a hora de inicio
+                    print(init_date)
                     end_date = date.replace(hour=23, minute=59, second=59) # Defina a hora final do filtro
                 case "month":
                     init_date = date.replace(day=1, hour=0, minute=0, second=0) # Define a hora de inicio

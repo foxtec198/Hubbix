@@ -12,7 +12,7 @@ from manager.models.products import Product, VwProducts, db
 class ProductService:
     @safe_route
     def get(self, token_data): # Obtem todos os produtos
-        args = rq.get_args
+        args = rq.args
         cr = token_data.get("cr")
         id = args.get("id")
         ean = args.get("ean")

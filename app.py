@@ -5,6 +5,11 @@ from dotenv import load_dotenv
 from os import getenv
 from flask_socketio import SocketIO
 from flask_cors import CORS
+from subprocess import call
+from os import name
+
+# Limpa o terminal para melhor visualização
+call("cls", shell=True) if name == "nt" else call("clear", shell=True) 
 
 # Printa inicialização da API
 print("="*20)

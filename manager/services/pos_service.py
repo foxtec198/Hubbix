@@ -118,7 +118,8 @@ class PosService:
         return jsonify("Matrícula é obrigatória"), 400 # Retorna BAD REQUEST - 400
 
     @safe_route
-    def last_close(self, cr=None) -> tuple: # Retorna o valor do troco do último fechamento
+    def last_close(self, token_data) -> tuple: # Retorna o valor do troco do último fechamento
+        cr = token_data.get("cr")
         return jsonify(PosClose.check(cr).troco), 200 
 
     # ===============================================================
