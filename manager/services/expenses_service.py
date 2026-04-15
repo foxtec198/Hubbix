@@ -59,7 +59,6 @@ class ExpenseService:
             db.session.commit() # Salva os registros
             return jsonify({ "msg": "Despesa criada", "expense": expense.to_dict() }), 201 # Retorna create, o id e a mensagem
         return jsonify(error), 400 # Caso não passe na veridicação retorna BAD REQUEST - 400
-        
     
     @safe_route
     def update(self, token_data):
