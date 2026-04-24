@@ -56,7 +56,7 @@ class PosService:
     @safe_route
     def append(self, token_data): # Adiciona valor ao caixa
         cr = token_data.get("cr")
-        body = rq.form
+        body = rq.get_json()
         mat = body.get("mat")
         if Pos.check(cr):
             emp = Employee._search_by_mat(mat, cr)
