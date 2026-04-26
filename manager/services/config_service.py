@@ -11,6 +11,32 @@ from manager.models.clients import Client
 from manager.models.config import Config
 
 class ConfigService:
+    def login(self) -> tuple:
+        """
+        ### Docstring for login.
+        Function used to Login in the system and obtain the access token.
+        
+        :return: (JSON, CODE)
+        :rtype: tuple[Response, Literal[200]] | tuple[Response, Literal[404]] | tuple[Response, Literal[401]] tuple[Response, Literal[400]]
+        """
+
+        body = rq.get_json() # Obtem o JSON do Body
+        mat = body.get("mat") # Matricula
+        pwd = body.get("pwd") # Senha
+
+        # Checka os dados obrigatórios
+        ok, error = check_field(matricula=mat, senha=pwd)
+
+        if ok: # Caso os dados estejam OK da continuidade
+            employee = Employee.query.filter_by(matricula=mat).first() # Busca o funcionario por matricula
+            if employee: # Caso encontre 
+                if check_password_hash(pwd, employee.hash): # Checka o hash do password com o do BD
+                    token = create_token({ "cr": employee.cr, "gc": employee.grupodecliente }) # Cria o token com os dados
+                    return jsonify({"access_token": token, "display_name": employee.nome, "perm": employee.permissao, "mat": employee.matricula }), 200 # Retorna sucesso com os dados
+                return jsonify("Senha incorreta"), 401 # Retorna UNAUTHORIZED - 401
+            return jsonify("Matricula não encontrada"), 404 # Retorna NOT FOUND - 404
+        return jsonify(error), 400 # Retorna BAD REQUEST - 400
+    
     @safe_route
     def read(self, token_data) -> tuple:
         """
@@ -81,32 +107,6 @@ class ConfigService:
                 return jsonify("Configuração não encontrada"), 404 # Retorna NOT FOUND - 404
             return jsonify("Arquivo de logo não encontrado - Nome: img"), 404 # Retorna NOT FOUND - 404
         return jsonify("Upload não encontrado"), 404 # Retorna NOT FOUND - 404
-
-    def login(self) -> tuple:
-        """
-        ### Docstring for login.
-        Function used to Login in the system and obtain the access token.
-        
-        :return: (JSON, CODE)
-        :rtype: tuple[Response, Literal[200]] | tuple[Response, Literal[404]] | tuple[Response, Literal[401]] tuple[Response, Literal[400]]
-        """
-
-        body = rq.get_json() # Obtem o JSON do Body
-        mat = body.get("mat") # Matricula
-        pwd = body.get("pwd") # Senha
-
-        # Checka os dados obrigatórios
-        ok, error = check_field(matricula=mat, senha=pwd)
-
-        if ok: # Caso os dados estejam OK da continuidade
-            employee = Employee.query.filter_by(matricula=mat).first() # Busca o funcionario por matricula
-            if employee: # Caso encontre 
-                if check_password_hash(pwd, employee.hash): # Checka o hash do password com o do BD
-                    token = create_token({ "cr": employee.cr, "gc": employee.grupodecliente }) # Cria o token com os dados
-                    return jsonify({"access_token": token, "display_name": employee.nome, "perm": employee.permissao, "mat": employee.matricula }), 200 # Retorna sucesso com os dados
-                return jsonify("Senha incorreta"), 401 # Retorna UNAUTHORIZED - 401
-            return jsonify("Matricula não encontrada"), 404 # Retorna NOT FOUND - 404
-        return jsonify(error), 400 # Retorna BAD REQUEST - 400
 
     @safe_route
     def check_mat(self, mat:int, token_data) -> tuple:
