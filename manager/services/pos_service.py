@@ -32,7 +32,7 @@ class PosService:
  
     @safe_route
     def open(self, token_data): # Abre o caixa se ná não estiver aberto
-        body = rq.form
+        body = rq.get_json()
         cr = token_data.get("cr")
         mat = body.get("mat")
         valor = body.get("valor", 0)
@@ -73,7 +73,7 @@ class PosService:
 
     @safe_route
     def close(self, token_data): # Fecha o caixa
-        mat = rq.args.get("mat")
+        mat = rq.get_json().get("mat")
         cr = token_data.get("cr")
         gc = token_data.get("gc")
         
