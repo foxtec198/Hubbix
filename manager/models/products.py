@@ -19,6 +19,7 @@ class Product(BaseModel):
     img = db.Column(db.String())
     grupodecliente = db.Column(db.String(), nullable=False)
     cr = db.Column(db.String(), nullable=False)
+    id_categoria = db.Column()
 
     @classmethod
     def _search_by_cr(cls, cr) -> list:
