@@ -11,3 +11,8 @@ def main():
         case "POST": return prod_service.create()
         case "PATCH": return prod_service.update()
         case "DELETE": return prod_service.delete()
+
+@product_bp.route("/categorias")
+def get_by_categories():
+    if rq.method == "GET":
+        return prod_service.get_categories()

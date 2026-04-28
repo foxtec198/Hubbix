@@ -1,13 +1,14 @@
 # utils
 from manager.models.timezone import fuso
-from werkzeug.datastructures.headers import Headers
 from utils.safe_route import safe_route
 from utils.now import now
 from flask import jsonify, request as rq
 from utils.check_field import check_field
 from os import path, getcwd
+
 # models
 from manager.models.products import Product, VwProducts, db
+from manager.models.categories import Categorie
 
 class ProductService:
     @safe_route
@@ -22,6 +23,21 @@ class ProductService:
         elif ean: return VwProducts._search_by_ean(ean)
         elif nome: return VwProducts._search_by_name(nome)
         else: return VwProducts._searh_by_cr(cr)
+
+    @safe_route
+    def get_categories(self, token_data):
+        cr = token_data.get('cr')
+        categories =  Categorie._search_by_cr(cr)
+        categories_map = {c['id']:c["nome"] for c in categories}
+        group = {c["nome"]: [] for c in categories}
+        products = Product._search_by_cr(cr)
+
+        for product in products:
+            nome = categories_map.get(product["id_categoria"])
+            if nome: group[nome].append(product)
+        
+        return jsonify(group)
+
 
     @safe_route
     def create(self, token_data): # Cria um produto
