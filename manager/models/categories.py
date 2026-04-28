@@ -1,4 +1,5 @@
 from general.models.base_model import BaseModel, db
+from sqlalchemy import or_
 
 class Categorie(BaseModel):
     __bind_key__ = "manager"
@@ -9,14 +10,19 @@ class Categorie(BaseModel):
     cr = db.Column(db.String)
     gc = db.Column(db.String)
 
+    from sqlalchemy import or_
+
     @classmethod
     def _search_by_cr(categorie, cr):
         categories = categorie.query.filter(
-            categorie.cr == cr
+            or_(
+                categorie.cr == cr,
+                categorie.id == 0
+            )
         ).order_by(
             categorie.nome.asc()
         ).all()
-        
+
         return [c.to_dict() for c in categories]
 
     @classmethod
