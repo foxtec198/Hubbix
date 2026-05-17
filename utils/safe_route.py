@@ -18,6 +18,8 @@ def safe_route(func):
             if "token_data" in sig.parameters: kwargs["token_data"] = token_data # Adiciona os dados do token no Kwargs
             return func(*args, **kwargs) # Retorna a função e seus params
         except ExpiredSignatureError: return jsonify("Token de acesso expirado"), 401 # Retorna token expirado 401 UNAUTHORIZED
-        except Exception as e: return jsonify("Erro com o servidor: " + str(e)), 500 # Retorna invalido 401 UNAUTHORIZED
+        except Exception as e: 
+            print(e)
+            return jsonify("Erro com o servidor: " + str(e)), 500 # Retorna invalido 401 UNAUTHORIZED
     return wrapper # Retorna o wrapper
     

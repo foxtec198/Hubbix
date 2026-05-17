@@ -29,9 +29,16 @@ class Order(BaseModel):
     imei = db.Column(db.String())
 
     @classmethod
-    def search_by_cr(cls, cr):
-        oss = cls.query.filter_by(cr=cr).all()
+    def _search_by_cr(cls, cr):
+        oss = cls.query.filter(cls.cr==cr).all()
         return [o.to_dict() for o in oss]
+
+    @classmethod
+    def _search_by_id(cls, id):
+        oss = cls.query.filter(cls.id == id).all()
+        return [o.to_dict() for o in oss]
+    
+
         
 
         

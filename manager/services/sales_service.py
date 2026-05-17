@@ -7,6 +7,9 @@ from utils.db import db
 from utils.now import now
 # Models
 from manager.models.sales import Sale
+from manager.models.products import Product
+from manager.models.orders import Order
+from manager.models.releases import Release
 
 class SalesService:
     @safe_route
@@ -31,27 +34,35 @@ class SalesService:
         gc = token_data.get("gc")
 
         valor = bd.get("valor") # Valor da Venda
-        desconto = bd.get("desconto") # Valor do desconto
         pagamento = bd.get("pagamento") # Metodo de pagamento
-        id_cliente = bd.get("id_cliente", 0) # Obtem o id do cliente, caso contrario define como 0(Não informado)
+        matricula = int(bd.get("mat")) # Matricula
+        desconto = bd.get("desconto", 0) # Valor do desconto
+        id_cliente = bd.get("client_id", 0) # Obtem o id do cliente, caso contrario define como 0(Não informado)
         tipo = bd.get("tipo", "PRODUTOS") # Tipo Produtos/OS
-        matricula = bd.get("mat") # Matricula
+        cart = bd.get("cart")
         data = now(fuso(cr)) # Data atual
 
-        ok, error = check_field( # Confirma os valres obrigatorios.
-            valor=valor,
-            pagamento=pagamento,
-            id_cliente=id_cliente,
-            tipo=tipo,
-            matricula=matricula
-        )
+        # Confirma os valres obrigatorios.
+        ok, error = check_field(valor=valor, pagamento=pagamento, matricula=matricula)
         
         if ok: # Confere se os dados estão ok
             nova_venda = Sale(
-                valor=valor, cr=cr, pagamento=pagamento, 
-                desconto=desconto, data=data, grupodecliente=gc
+                valor=valor, cr=cr, pagamento=pagamento, id_cliente=id_cliente, tipo=tipo,
+                desconto=desconto, data=data, grupodecliente=gc, matricula=matricula
             ) # Cria a nvoa venda
             db.session.add(nova_venda) # Adiciona a nova venda na sessao
+
+            for id in cart:
+                quant = cart[id]
+                match tipo:
+                    case "PRODUTOS":
+                        for i in range(quant):
+                            produto = Product()._search_by_id(int(id))
+                            db.session.add(Release(id_venda=nova_venda.id, nome=produto.nome, valor=produto.valor, custo=produto.custo, data=data, cr=cr, grupodecliente=gc))
+                    case "OS":
+                        os = Order()._search_by_id(int(id))
+                        db.session.add(Release(id_venda=nova_venda.id, nome=f"OS - NUM: {id}", valor=os.valor, custo=os.custo, data=data, cr=cr, grupodecliente=gc))
+
             db.session.commit() # Salva a nova venda no bd 
             return jsonify(nova_venda.to_dict()), 201 # Retorna create com a nova venda e seus dados!
-        return jsonify(error), 400 # Retorna um bad request com o campo faltante
+        return jsonify("Dados Obrigatórios: " + error), 400 # Retorna um bad request com o campo faltante
