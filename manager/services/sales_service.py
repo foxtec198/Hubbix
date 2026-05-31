@@ -9,23 +9,23 @@ from utils.now import now
 from manager.models.sales import Sale
 from manager.models.products import Product
 from manager.models.orders import Order
-from manager.models.releases import Release
+from manager.models.releases import Release, ViewRelease
 
 class SalesService:
     @safe_route
     def get(self, token_data): # Obtem todas as vendas por ID ou CR
-        args = rq.args
+        filter = rq.args
         cr = token_data.get("cr")
-        id = args.get("id")
-        month = args.get("month")
-        day = args.get("day")
-        year= args.get("year")
-        if id: 
-            sale = Sale._search_by_id(id).first()
-            if sale: return jsonify(sale.to_dict())
-            return jsonify("Funcionario nao encontrado"), 404
-        if day and month and year: return jsonify(Sale._search_by_date(day, month, year, cr))
-        else: return jsonify(Sale._search_by_cr(cr))
+        
+        for value in filter:
+            match value:
+                case "id": 
+                    return jsonify(Sale()._search_by_id(id).to_dict())
+
+                case "month": 
+                    return jsonify(ViewRelease._search_by_month(int(filter.get("month")), cr))
+
+        return jsonify(Sale._search_by_cr(cr))
 
     @safe_route
     def create(self, token_data): # Cria uma nova venda

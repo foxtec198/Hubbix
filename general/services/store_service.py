@@ -1,6 +1,7 @@
 from utils.safe_route import safe_route
 from general.models.store import Store
 from manager.models.config import Config
+from gourmet.models.config import Config as GConfig
 from flask import jsonify, request as rq
 from utils.db import db
 
@@ -10,14 +11,15 @@ class StoreService:
         cr = token_data.get("cr")
         store = Store.query.filter_by(cr=cr).first()
         if store: 
-            # config = Config.query.filter_by(cr=cr).first() | GConfig.query.filter_by(cr=cr).first()
-            config = Config.query.filter_by(cr=cr).first()
-            if config:
-                return jsonify({
-                    "loja": store.to_dict(),
-                    "logo": config.logo
-                })
-            return jsonify("Configuração nao encontrada"), 404
+            mconfig = Config.query.filter_by(cr=cr).first() # Busca configuração do Manager
+            gconfig = GConfig.query.filter_by(cr=cr).first() if not mconfig else ... # Confirma se foi encontrado a configuação do Manager se foi só ignora
+            if not mconfig and not gconfig: return jsonify("Nenhuma configuração encontrada"), 404
+            config = mconfig if mconfig else gconfig
+            
+            return jsonify({
+                "loja": store.to_dict(),
+                "config": config.to_dict()
+            })
         return jsonify("Loja nao encontrada"), 404
 
     @safe_route

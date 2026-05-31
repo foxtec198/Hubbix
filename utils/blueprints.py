@@ -1,3 +1,4 @@
+# BPS Manager =============================================
 from manager.routes.clients_routes import clientes_bp
 from manager.routes.employees_routes import employees_bp
 from manager.routes.config_routes import config_bp
@@ -15,15 +16,19 @@ from manager.routes.expenses_routes import expenses_bp
 from manager.routes.providers_routes import providers_bp
 from manager.routes.categories_routes import categories_bp
 
+# BPS Gourmet =============================================
+from gourmet.routes.auth_routes import auth_bp as auth_gourmet_bp
+from gourmet.routes.pos_routes import pos_bp as pos_gourmet_bp
+from gourmet.routes.products_routes import products_bp as products_gourmet_bp
+from gourmet.routes.categories_routes import categories_bp as categories_gourmet_bp
+
+# BPS Gerais =============================================
 from general.routes.email_routes import email_bp
 from general.routes.store_routes import store_bp
 from general.routes.files_routes import files_bp
 
+# BPS BKSchedular =============================================
 from bks.routes.schedule_routes import schedule_bp
-
-from analytics.routes.users_routes import user_bp 
-from analytics.routes.analytics_routes import analytics_bp 
-from analytics.routes.clients_routes import  clients_bp
 
 blueprints = {
     # Manager
@@ -49,11 +54,12 @@ blueprints = {
     email_bp: "/api/email",
     files_bp: "/api/files",
 
-    # BKS
+    # BKSchedular
     schedule_bp: "/api/bks",
 
-    # Analytics
-    analytics_bp: "/api/analytics",
-    clients_bp: "/api/analytics/clients",
-    user_bp: "/api/analytics/users",
+    # Gourmet
+    auth_gourmet_bp: "/api/gourmet/auth",
+    pos_gourmet_bp: "/api/gourmet/caixa",
+    products_gourmet_bp: "/api/gourmet/produtos",
+    categories_gourmet_bp: "/api/gourmet/categorias",
 }

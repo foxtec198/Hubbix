@@ -1,16 +1,16 @@
 from dotenv import load_dotenv
-from flask import Flask, jsonify
+from flask import Flask
 from flask_socketio import SocketIO
 from flask_cors import CORS
 from utils.db import db
 from utils.blueprints import blueprints
 from os import getenv, name as os_name
-from subprocess import call
+from subprocess import run
 
 # Limpa o terminal para melhor visualização [NT is Windows, UNIX is Linux/Mac]
-call("cls", shell=True) if os_name == "nt" else call("clear", shell=True) 
+run("cls", shell=True) if os_name == "nt" else run("clear", shell=True) 
 
-# Printa inicialização da API
+# Inicialização da API ============================================
 msg = "Iniciando Hubbix API - Versão 1.4.9"
 print("="*len(msg))
 print(msg)
@@ -19,7 +19,7 @@ print("="*len(msg))
 load_dotenv() # Carrega as variaveis de ambiente
 print("\n[✅] - Variaveis de ambiente carregadas com sucesso \n")
 
-print("Configurando API...")
+# Configuração do app ============================================
 app = Flask(__name__) # Cria a instacia do APP
 CORS(app) # CORS Policy 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="gevent") # Cria o SocketIO
@@ -37,14 +37,16 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = { # Configura os params do BD
 }
 print("[✅] - API Configurada com Sucesso! \n") # Retorna sucesso na config. API
 
-print("Iniciando Banco de Dados...") # Init DB
+# Banco de Dados ============================================
+print("Iniciando Banco de Dados... ⚛️") # Init DB
 db.init_app(app)# Inicia o banco de dados no APP
 print("[✅] - Banco de Dados Iniciado com Sucesso! \n") # Success DB
 
-# Carrega os Blueprints a partir do arquivo utils/blueprints.py
+# Carrega os Blueprints a partir do arquivo utils/blueprints.py ============================================
 print("Cadastrando rotas... 🚀") # Init BP
 for bp in blueprints: app.register_blueprint(bp, url_prefix=blueprints[bp])
-print("Todas rotas cadastradas com sucesso ✅ \n") # Sucess BP
+print("[✅] - Todas rotas cadastradas com sucesso \n") # Sucess BP
 
 # Modo Desenvolvimento
-if __name__ == "__main__": app.run(debug=True, host="0.0.0.0", port=int(getenv("PORT", 9560)))
+if __name__ == "__main__": 
+    socketio.run(app, debug=True, host="0.0.0.0", port=int(getenv("PORT", 9560)))

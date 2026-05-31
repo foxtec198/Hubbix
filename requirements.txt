@@ -9,6 +9,7 @@ flask
 flask-cors
 Flask-SocketIO
 Flask-SQLAlchemy
+flask_socketio
 greenlet
 gunicorn
 h11
