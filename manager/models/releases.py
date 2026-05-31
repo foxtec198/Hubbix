@@ -33,7 +33,7 @@ class ViewRelease(BaseModel):
     tipo = db.Column(db.String)
     qr = db.Column(db.String)
     ext_key = db.Column(db.String)
-
+    photo = db.Column(db.String)
 
     @classmethod
     def _search_by_month(rls, month:int, cr):
