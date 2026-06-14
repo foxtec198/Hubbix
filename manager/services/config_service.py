@@ -33,8 +33,8 @@ class ConfigService:
                 if check_password_hash(pwd, employee.hash): # Checka o hash do password com o do BD
                     token = create_token({ "cr": employee.cr, "gc": employee.grupodecliente }) # Cria o token com os dados
                     return jsonify({"access_token": token, "display_name": employee.nome, "perm": employee.permissao, "mat": employee.matricula }), 200 # Retorna sucesso com os dados
-                return jsonify("Senha incorreta"), 401 # Retorna UNAUTHORIZED - 401
-            return jsonify("Matricula não encontrada"), 404 # Retorna NOT FOUND - 404
+                return jsonify("Senha incorreta"), 400 # Retorna BAD REQUEST - 400
+            return jsonify("Matricula não encontrada"), 400 # Retorna BAD REQUEST - 400
         return jsonify(error), 400 # Retorna BAD REQUEST - 400
     
     @safe_route
