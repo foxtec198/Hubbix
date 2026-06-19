@@ -29,7 +29,8 @@ class Expense(BaseModel):
             expense.motivo,
             expense.valor,
             expense.data,
-            Employee.nome.label("funcionario")
+            Employee.nome.label("funcionario"),
+            Employee.photo
         ).join(
             Employee, Employee.matricula == expense.matricula
         ).filter( 
