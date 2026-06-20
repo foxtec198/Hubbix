@@ -24,9 +24,10 @@ class ExpenseService:
         id = args.get("id") # ID da Despesa
         date = args.get("data") # Data
         # Caso seja passado o id retorna a Despesa exclusiva
-        if id: return jsonify(Expense.get_expense(id, cr)), 200 # Retorna sucesso
+        if id: return jsonify(Expense._search_by_id(cr, id)), 200 # Retorna sucesso
         if date: # Retorna pela data informada no args (DD-MM-YYYY)
-            formated_dt = now().strptime(date, "%d-%m-%Y") # Formata a data pro estilo UTC
+            print(date)
+            formated_dt = now().strptime(date, "%d/%m/%Y") # Formata a data pro estilo UTC
             return jsonify(Expense._search_all_by_date(cr, formated_dt)), 200 # Retorna as despesas pela data declarada caso haja alguma
         return jsonify(Expense._search_default(cr)), 200 # Retorna o default - a partir de 3 meses atras
 

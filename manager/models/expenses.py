@@ -42,14 +42,16 @@ class Expense(BaseModel):
         ).all()
         
         res = list()
-        for expense in expenses:
+        for e in expenses:
             res.append({
-                "id": expense.id,
-                "motivo": expense.motivo,
-                "valor": expense.valor,
-                "data": expense.data,
-                "funcionario": expense.funcionario
+                "id": e.id,
+                "motivo": e.motivo,
+                "valor": e.valor,
+                "data": e.data,
+                "funcionario": e.funcionario,
+                "photo": e.photo
             })
+            
         return res
             
     
@@ -58,27 +60,62 @@ class Expense(BaseModel):
         dt = dt.replace(day=dt.day, month=dt.month, year=dt.year, hour=0, minute=0, second=0, microsecond=0) # Transforma a data em DD-MM-YYYY 00:00:00:000
         end_dt = dt.replace(hour=23, minute=59, second=59) # Trasnforma no final do di - DD-MM-YYYY 23:59:59
 
-        # Obtem todas as depesas pela data
-        expenses = expense.query.filter(
+        expenses = db.session.query(
+            expense.id,
+            expense.motivo,
+            expense.valor,
+            expense.data,
+            Employee.nome.label("funcionario"),
+            Employee.photo
+        ).join(
+            Employee, Employee.matricula == expense.matricula
+        ).filter( 
             expense.cr == cr, 
             expense.data >= dt, 
             expense.data < end_dt
         ).order_by(
             expense.data.desc()
         ).all()
-
-        # Retorna as despesas
-        return [e.to_dict() for e in expenses] 
+        
+        res = list()
+        for e in expenses:
+            res.append({
+                "id": e.id,
+                "motivo": e.motivo,
+                "valor": e.valor,
+                "data": e.data,
+                "funcionario": e.funcionario,
+                "photo": e.photo
+            })
+        return res
         
     
     @classmethod
     def _search_by_id(expense, cr, id):
-        return expense.query.filter(expense.cr == cr, expense.id == id).first()
+        expenseSearch = db.session.query(
+            expense.id,
+            expense.motivo,
+            expense.valor,
+            expense.data,
+            Employee.nome.label("funcionario"),
+            Employee.photo
+        ).join(
+            Employee, Employee.matricula == expense.matricula
+        ).filter( 
+            expense.cr == cr,
+            expense.id == id
+        ).order_by(
+            expense.data.desc()
+        ).first()
 
-    @classmethod
-    def get_expense(expense, id, cr) -> dict: # Obtem por id
-        # Seleciona por ID e por CR - Quase uma autenticação de dois fatores rs.
-        e = expense.query.filter(expense.cr == cr, expense.id == id).first() 
-        
-        # O motivo de pegar o FIRST e nao o ONE, é que se não obtiver resultado no FIRST ele retorna vazio, já o ONE retorna erro.
-        return e.to_dict() # Retorna as despesas
+        res = list()
+        for e in expenseSearch:
+            res.append({
+                "id": e.id,
+                "motivo": e.motivo,
+                "valor": e.valor,
+                "data": e.data,
+                "funcionario": e.funcionario,
+                "photo": e.photo
+            })
+        return res
