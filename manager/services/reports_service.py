@@ -24,7 +24,12 @@ class ReportsService:
             mes_passado = data - relativedelta(months=1) # Data do mes anterior
             meta_dia = defaultdict(int) # Metas dos dias
             meta_mes = defaultdict(int) # Metas dos meses
-            payments = defaultdict(int) # Metodos de pagamentos
+            payments = {
+                "DEBITO": 0,
+                "CREDITO": 0,
+                "PIX": 0,
+                "DINHEIRO": 0
+            } # Metodos de pagamentos
             real_mes = 0 
             real_dia = 0
             cont_vendas = 0
@@ -44,7 +49,7 @@ class ReportsService:
                 if sale.data.month == data.month and sale.data.year == data.year: 
                     real_mes += sale.valor - sale.desconto # Real no Mes
                     if sale.matricula == mat: real_func += sale.valor - sale.desconto # Vendas por funcionario
-                    payments[sale.pagamento] += sale.valor - sale.desconto # Pega os metodos pagamentos
+                    payments[sale.pagamento.upper()] += sale.valor - sale.desconto # Pega os metodos pagamentos
 
                 # REFERENTE A MES PASSADO   
                 if sale.data.month == mes_passado.month and sale.data.year == mes_passado.year: 
@@ -85,6 +90,10 @@ class ReportsService:
             }), 200
         return jsonify("Matricula Obrigatória"), 400
 
+    @safe_route
+    def get_init_reports(self, token_data):
+        ...
+        
     @safe_route
     def get_reports_payments_screen(self, token_data):
         args = rq.args
