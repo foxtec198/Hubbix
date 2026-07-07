@@ -8,13 +8,14 @@ from flask_cors import CORS
 from subprocess import call
 from os import name
 
-# Limpa o terminal para melhor visualização
-call("cls", shell=True) if name == "nt" else call("clear", shell=True) 
+def restore_screen():
+    """Restaura a tela sempre que o servidor sobe (incluindo reload)."""
+    call("cls", shell=True) if name == "nt" else call("clear", shell=True)
+    print("="*20)
+    print("Iniciando Hubbix API")
+    print("="*20)
 
-# Printa inicialização da API
-print("="*20)
-print("Iniciando Hubbix API")
-print("="*20)
+restore_screen()
 
 load_dotenv() # Carrega as variaveis de ambiente
 print("[✅] - Variaveis de ambiente carregadas com sucesso")
@@ -45,6 +46,10 @@ print("[✅] - Banco de Dados Iniciado com Sucesso!") # Success DB
 print("Cadastrando rotas... 🚀") # Init BP
 for bp in blueprints: app.register_blueprint(bp, url_prefix=blueprints[bp])
 print("Todas rotas cadastradas com sucesso ✅") # Sucess BP
+
+@app.before_serving
+def _restore_screen_on_reload():
+    restore_screen()
 
 # Modo Desenvolvimento
 if __name__ == "__main__": app.run(debug=True, host="0.0.0.0", port=int(getenv("PORT", 9560)))
